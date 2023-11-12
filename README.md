@@ -1,2 +1,2 @@
 # StockPikr
-Front-end for the MSCS SE Project
+Back-end for the MSCS SE Project
