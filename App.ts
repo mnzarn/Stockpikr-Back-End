@@ -2,18 +2,22 @@ import * as path from 'path';
 import express from 'express';
 import * as url from 'url';
 import * as bodyParser from 'body-parser';
+import dotenv from 'dotenv';
 
 // Creates and configures an ExpressJS web server.
 class App {
 
   // ref to Express instance
   public express: express.Application;
+  public FMP_API_KEY: string | undefined;
 
   //Run configuration methods on the Express instance.
   constructor() {
     this.express = express();
     this.middleware();
     this.routes();
+    dotenv.config();
+    this.FMP_API_KEY = "&apikey=" + process.env.FMP_API_KEY;;
   }
 
   // Configure Express middleware.
