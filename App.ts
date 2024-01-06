@@ -3,14 +3,18 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import userRouter from './routes/users';
+import dotenv from 'dotenv';
 
 class App {
   public express: express.Application;
+  public FMP_API_KEY: string | undefined;
 
   constructor() {
     this.express = express();
     this.middleware();
     this.routes();
+    dotenv.config();
+    this.FMP_API_KEY = "&apikey=" + process.env.FMP_API_KEY;;
   }
 
   private middleware(): void {
