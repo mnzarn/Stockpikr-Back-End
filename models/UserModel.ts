@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
-import { Access } from '../Access/Access';
+import { Access } from '../DataAccess';
 import { IUserModel } from '../interfaces/IUserModel';
 
 let mongooseConnection = Access.mongooseConnection;

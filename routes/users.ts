@@ -8,6 +8,7 @@ const Users = new UserModel();
 // const userID = Users.addUser('John', 'Doe', '123 Main Street', '1234567890');
 // console.log('User added with ID:', userID);
 
+//Get one user by ID
 userRouter.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -23,6 +24,7 @@ userRouter.get('/:id', async (req, res, next) => {
   }
 });  
 
+//Get all users
 userRouter.get('/', async (req, res, next) => {
   try {
     const users = await Users.getUsers();
@@ -37,6 +39,7 @@ userRouter.get('/', async (req, res, next) => {
   }
 });
 
+//Update user information by ID
 userRouter.put('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
