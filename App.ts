@@ -1,9 +1,9 @@
-import * as path from 'path';
-import express from 'express';
-import bodyParser from 'body-parser';
-import cors from 'cors';
-import userRouter from './routes/users';
-import dotenv from 'dotenv';
+import bodyParser from "body-parser";
+import cors from "cors";
+import express from "express";
+import * as path from "path";
+import { config } from "./config";
+import userRouter from "./routes/users";
 
 class App {
   public express: express.Application;
@@ -13,8 +13,7 @@ class App {
     this.express = express();
     this.middleware();
     this.routes();
-    dotenv.config();
-    this.FMP_API_KEY = "&apikey=" + process.env.FMP_API_KEY;;
+    this.FMP_API_KEY = "&apikey=" + config.FMP_API_KEY;
   }
 
   private middleware(): void {
@@ -28,24 +27,20 @@ class App {
 
     router.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", "*");
-      res.header(
-        "Access-Control-Allow-Headers",
-        "Origin, X-Requested-With, Content-Type, Accept"
-      );
+      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
       res.header("Access-Control-Allow-Methods", "*");
       next();
     });
 
-
-    router.get('/', (req, res, next) => {
-      res.send('Express + TypeScript Server');
+    router.get("/", (req, res, next) => {
+      res.send("Express + TypeScript Server");
     });
 
-    this.express.use('/api/users', userRouter);
+    this.express.use("/api/users", userRouter);
 
-    this.express.use('/', router);
-    this.express.use('/images', express.static(path.join(__dirname, 'img')));
-    this.express.use('/', express.static(path.join(__dirname, 'pages')));
+    this.express.use("/", router);
+    this.express.use("/images", express.static(path.join(__dirname, "img")));
+    this.express.use("/", express.static(path.join(__dirname, "pages")));
   }
 }
 
