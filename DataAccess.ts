@@ -1,13 +1,17 @@
 import Mongoose from "mongoose";
+import dotenv from "dotenv";
 
-class Access {
+dotenv.config();
+
+
+class DataAccess {
 
     static mongooseInstance: any;
     static mongooseConnection: Mongoose.Connection;
-    static DB_CONNECTION_STRING: string = "mongodb+srv://test:test@stockpikr.zrmjvdi.mongodb.net/Users"
+    static DB_CONNECTION_STRING: string = process.env.DB_CONNECTION_STRING || "";
 
     constructor() {
-        Access.connect();
+        DataAccess.connect();
     }
 
     static connect(): Mongoose.Connection {
@@ -24,5 +28,5 @@ class Access {
 
 }
 
-Access.connect();
-export { Access };
+DataAccess.connect();
+export { DataAccess };
