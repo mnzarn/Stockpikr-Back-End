@@ -2,13 +2,6 @@ require('dotenv').config();
 
 db = Mongo(process.env.DB_CONNECTION_STRING).getDB('stockpikr');
 
-db.createUser(
-    {
-        user: "dbAdmin",
-        pwd: "test",
-        roles: ["readWrite", "dbAdmin"]
-    }
-)
 
 db.users.drop();
 db.users.insertMany([
@@ -27,5 +20,31 @@ db.users.insertMany([
         phoneNumber: "9876543210",
     }
 ]);
+
+db.watchlists.drop();
+db.watchlists.insertMany([
+    {
+        watchlistID: "000000000000000000001",
+        userID: "000000000000000000001",
+        tickers: [
+            "AAPL",
+            "MSFT",
+            "GOOG",
+            "AMZN",
+            "TSLA"
+        ]
+    },
+    {
+        watchlistID: "000000000000000000002",
+        userID: "000000000000000000002",
+        tickers: [
+            "RYTM",
+            "EXTR",
+            "AVDX",
+            "BEAM"
+        ]
+    }
+]);
+
 
 console.log("Database populated successfully!")

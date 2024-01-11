@@ -4,6 +4,7 @@ import express from "express";
 import * as path from "path";
 import { config } from "./config";
 import userRouter from "./routes/users";
+import watchlistRouter from "./routes/watchlists";
 
 class App {
   public express: express.Application;
@@ -37,6 +38,7 @@ class App {
     });
 
     this.express.use("/api/users", userRouter);
+    this.express.use("/api/watchlists", watchlistRouter);
 
     this.express.use("/", router);
     this.express.use("/images", express.static(path.join(__dirname, "img")));
