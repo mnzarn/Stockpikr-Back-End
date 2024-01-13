@@ -1,14 +1,13 @@
 import * as chai from "chai";
 import chaiHttp from "chai-http";
-import dotenv from "dotenv";
+import { config } from "../config.ts";
 
 chai.use(chaiHttp);
-dotenv.config();
 
 const expect = chai.expect;
 const ticker = "AAPL";
 const exchange = "NASDAQ";
-const FMP_API_KEY = process.env.FMP_API_KEY;
+const FMP_API_KEY = config.FMP_API_KEY;
 const url = `https://financialmodelingprep.com/api/v3/search-ticker?query=${ticker}&limit=1&exchange=${exchange}&apikey=${FMP_API_KEY}`;
 
 describe("test-fmp", () => {
