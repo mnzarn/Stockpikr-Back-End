@@ -1,13 +1,11 @@
-import mongoose, { Schema, Document } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
-import { Access } from '../DataAccess';
-import { IUserModel } from '../interfaces/IUserModel';
-
-let mongooseConnection = Access.mongooseConnection;
+import { Model, Schema } from "mongoose";
+import { v4 as uuidv4 } from "uuid";
+import { DataAccess } from "../DataAccess";
+import { IUserModel } from "../interfaces/IUserModel";
 
 class UserModel {
-  public schema: any;
-  public model: any;
+  public schema: Schema;
+  public model: Model<IUserModel>;
 
   public constructor() {
     this.createSchema();
@@ -21,17 +19,18 @@ class UserModel {
         firstName: String,
         lastName: String,
         address: String,
-        phoneNumber: String,
+        phoneNumber: String
       },
       {
-        collection: 'users',
-        versionKey: false,
+        collection: "users",
+        versionKey: false
       }
     );
   }
 
-  public createModel(): void {
-    this.model = mongooseConnection.model<IUserModel>('users', this.schema);
+  public async createModel() {
+    await DataAccess.connect();
+    this.model = DataAccess.mongooseConnection.model<IUserModel>("users", this.schema);
   }
 
   public async addUser(firstName: string, lastName: string, address: string, phoneNumber: string) {
@@ -43,7 +42,7 @@ class UserModel {
       firstName: firstName,
       lastName: lastName,
       address: address,
-      phoneNumber: phoneNumber,
+      phoneNumber: phoneNumber
     });
 
     await newUser.save();
@@ -51,32 +50,33 @@ class UserModel {
   }
 
   public async updateUser(userID: string, firstName: string, lastName: string, address: string, phoneNumber: string) {
-  try {
-    const updatedUser = await this.model.findOneAndUpdate(
-      { userID: userID },
-      { firstName, lastName, address, phoneNumber },
-      { new: true }
-    );
+    try {
+      const updatedUser = await this.model.findOneAndUpdate(
+        { userID: userID },
+        { firstName, lastName, address, phoneNumber },
+        { new: true }
+      );
 
-    return updatedUser;
-  } catch (error) {
-    console.error('Error updating user:', error);
-    return null;
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating user:", error);
+      return null;
+    }
   }
-}
 
   public async getUserByID(userID: string) {
     try {
       const user = await this.model.findOne({ userID: userID });
       return user;
     } catch (error) {
-      console.error('Error fetching user by ID:', error);
+      console.error("Error fetching user by ID:", error);
       return null;
     }
   }
 
   public async getUsers() {
     try {
+      console.log("model: ", this.model);
       const users = await this.model.find();
       return users || [];
     } catch (err) {

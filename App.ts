@@ -2,8 +2,13 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import { config } from "./config";
 import userRouter from "./routes/users";
+import watchlistRouter from "./routes/watchlists";
+// workaround when using ES module: https://iamwebwiz.medium.com/how-to-fix-dirname-is-not-defined-in-es-module-scope-34d94a86694d
+const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+const __dirname = path.dirname(__filename); // get the name of the directory
 
 class App {
   public express: express.Application;
@@ -37,6 +42,7 @@ class App {
     });
 
     this.express.use("/api/users", userRouter);
+    this.express.use("/api/watchlists", watchlistRouter);
 
     this.express.use("/", router);
     this.express.use("/images", express.static(path.join(__dirname, "img")));
