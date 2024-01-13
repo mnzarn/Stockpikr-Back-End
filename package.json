@@ -7,7 +7,8 @@
     "test": "mocha",
     "start": "tsx watch index.ts",
     "build": "tsc",
-    "startserver": "tsc && node ./dist/index.js"
+    "startserver": "tsc && node ./dist/index.js",
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "",
@@ -32,6 +33,7 @@
     "@types/uuid": "^9.0.7",
     "chai": "^5.0.0",
     "chai-http": "^4.4.0",
+    "husky": "^8.0.3",
     "mocha": "^10.2.0",
     "mongoose": "^8.0.3",
     "sinon": "^17.0.1",
