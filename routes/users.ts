@@ -8,6 +8,10 @@ const Users = new UserModel();
 // const userID = Users.addUser('John', 'Doe', '123 Main Street', '1234567890');
 // console.log('User added with ID:', userID);
 
+export const getUserById = (id: string) => {
+  
+}
+
 //Get one user by ID
 userRouter.get('/:id', async (req, res, next) => {
   try {

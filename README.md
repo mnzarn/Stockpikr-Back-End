@@ -14,4 +14,4 @@ Simply run `npm test`
 
 ## Notes:
 
-If you receive this similar error: `Error: Cannot find module '/Users/ducphamle/seattle-u/StockPikr/config' imported from /Users/ducphamle/seattle-u/StockPikr/test/fmp.spec.ts` => specify the full filename when importing. Eg: change from `import { config } from "../config";` to `import { config } from "../config.ts";`
+Need to have "es-module-specifier-resolution=node" in .mocharc.josn to allow typescript files import without .ts

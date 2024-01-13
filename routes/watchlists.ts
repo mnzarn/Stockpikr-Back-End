@@ -2,7 +2,7 @@ import { Router } from "express";
 import { WatchlistModel } from "../models/WatchlistModel";
 
 const watchlistRouter = Router();
-const Watchlists = new WatchlistModel();
+export const Watchlists = new WatchlistModel();
 
 //Get one watchlist by ID
 watchlistRouter.get("/:id", async (req, res, next) => {

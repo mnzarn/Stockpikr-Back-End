@@ -46,53 +46,23 @@ class WatchlistModel {
   }
 
   public async updateWatchlist(watchlistID: string, tickers: string[]) {
-    try {
-      const updatedWatchlist = await this.model.findOneAndUpdate(
-        { watchlistID: watchlistID },
-        { tickers },
-        { new: true }
-      );
-
-      return updatedWatchlist;
-    } catch (error) {
-      console.log(error);
-      return null;
-    }
+    return this.model.findOneAndUpdate({ watchlistID: watchlistID }, { tickers }, { new: true });
   }
 
   public async getWatchlistByID(watchlistID: string) {
-    try {
-      const watchlist = await this.model.findOne({ watchlistID: watchlistID });
-      return watchlist;
-    } catch (error) {
-      console.log(error);
-    }
+    return this.model.findOne({ watchlistID: watchlistID });
   }
 
   public async getWatchlistsByUserID(userID: string) {
-    try {
-      const watchlists = await this.model.find({ userID: userID });
-      return watchlists;
-    } catch (error) {
-      console.log(error);
-    }
+    return this.model.find({ userID: userID });
   }
 
   public async getWatchlists() {
-    try {
-      const watchlists = await this.model.find();
-      return watchlists;
-    } catch (error) {
-      console.log(error);
-    }
+    return this.model.find();
   }
 
   public async deleteWatchlist(watchlistID: string) {
-    try {
-      await this.model.deleteOne({ watchlistID: watchlistID });
-    } catch (error) {
-      console.log(error);
-    }
+    this.model.deleteOne({ watchlistID: watchlistID });
   }
 }
 

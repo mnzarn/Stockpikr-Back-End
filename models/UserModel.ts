@@ -50,38 +50,19 @@ class UserModel {
   }
 
   public async updateUser(userID: string, firstName: string, lastName: string, address: string, phoneNumber: string) {
-    try {
-      const updatedUser = await this.model.findOneAndUpdate(
-        { userID: userID },
-        { firstName, lastName, address, phoneNumber },
-        { new: true }
-      );
-
-      return updatedUser;
-    } catch (error) {
-      console.error("Error updating user:", error);
-      return null;
-    }
+    return this.model.findOneAndUpdate(
+      { userID: userID },
+      { firstName, lastName, address, phoneNumber },
+      { new: true }
+    );
   }
 
   public async getUserByID(userID: string) {
-    try {
-      const user = await this.model.findOne({ userID: userID });
-      return user;
-    } catch (error) {
-      console.error("Error fetching user by ID:", error);
-      return null;
-    }
+    return this.model.findOne({ userID: userID });
   }
 
   public async getUsers() {
-    try {
-      console.log("model: ", this.model);
-      const users = await this.model.find();
-      return users || [];
-    } catch (err) {
-      throw err;
-    }
+    return this.model.find();
   }
 }
 

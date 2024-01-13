@@ -1,4 +1,4 @@
-import { App } from "./App";
+import { App } from "./App.ts";
 import { config } from "./config";
 
 const port = config.PORT;
@@ -7,3 +7,5 @@ const server = app.express;
 server.listen(port, async () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });
+
+export default server;
