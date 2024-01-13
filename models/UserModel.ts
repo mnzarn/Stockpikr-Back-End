@@ -1,9 +1,9 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
-import { Access } from '../DataAccess';
+import { DataAccess } from '../DataAccess';
 import { IUserModel } from '../interfaces/IUserModel';
 
-let mongooseConnection = Access.mongooseConnection;
+let mongooseConnection = DataAccess.mongooseConnection;
 
 class UserModel {
   public schema: any;
