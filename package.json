@@ -4,7 +4,7 @@
   "description": "Front-end for the MSCS SE Project",
   "main": "dist/index.js",
   "scripts": {
-    "test": "mocha",
+    "test": "mocha --exit",
     "start": "tsx watch index.ts",
     "build": "tsc",
     "startserver": "tsc && node ./dist/index.js",
