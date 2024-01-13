@@ -10,4 +10,4 @@ Simply run `npm run startserver` or `npm run start` to start on development mode
 
 Simply run `npm test`
 
-> Note: The test extension is currently `.spec.mjs` to avoid ES Module & `require()` import errors
+## Tips: How to setup mocha w typescript: https://github.com/mochajs/mocha-examples/issues/47#issuecomment-952339528
