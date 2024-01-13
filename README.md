@@ -8,7 +8,7 @@ Simply run `npm run startserver` or `npm run start` to start on development mode
 
 # Running tests
 
-Simply run `npm test`
+Simply run `npm test` or `yarn test` if you use yarn
 
 ## Tips: How to setup mocha w typescript: https://github.com/mochajs/mocha-examples/issues/47#issuecomment-952339528
 
