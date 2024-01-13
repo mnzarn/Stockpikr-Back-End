@@ -1,30 +1,31 @@
 import Mongoose from "mongoose";
 import { config } from "./config";
 
-
 class DataAccess {
+  static mongooseInstance: Mongoose.Mongoose;
+  static mongooseConnection: Mongoose.Connection;
+  static DB_CONNECTION_STRING: string = config.DB_CONNECTION_STRING;
 
-    static mongooseInstance: any;
-    static mongooseConnection: Mongoose.Connection;
-    static DB_CONNECTION_STRING: string = config.DB_CONNECTION_STRING;
+  static async connect(): Promise<Mongoose.Connection> {
+    if (this.mongooseConnection) return this.mongooseConnection;
 
-    constructor() {
-        DataAccess.connect();
+    this.mongooseInstance = await Mongoose.connect(this.DB_CONNECTION_STRING);
+    // wait til we have connected to Mongo successfully -> return our connection
+    try {
+      await new Promise<void>((resolve, reject) => {
+        // set timeout for mongo connection
+        setTimeout(reject, config.MONGO_CONN_TIMEOUT);
+        this.mongooseInstance.connection.on("open", () => {
+          console.log("Connected to MongoDB");
+          resolve();
+        });
+      });
+    } catch (e) {
+      // do nothing because if conn reaches timeout -> there has already been a connection -> no need to connect anymore
     }
-
-  static connect(): Mongoose.Connection {
-    if (this.mongooseInstance) return this.mongooseInstance;
-    
-    this.mongooseConnection = Mongoose.connection;
-    this.mongooseConnection.on("open", () => {
-      console.log("Connected to MongoDB");
-    });
-
-    this.mongooseInstance = Mongoose.connect(this.DB_CONNECTION_STRING);
-    return this.mongooseInstance;
+    this.mongooseConnection = this.mongooseInstance.connection;
+    return this.mongooseConnection;
   }
 }
 
-
-DataAccess.connect();
 export { DataAccess };
