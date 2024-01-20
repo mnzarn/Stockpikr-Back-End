@@ -1,7 +1,7 @@
 import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
-import * as passport from "passport";
+import passport from "passport";
 import * as passportGoogle from "passport-google-oauth20";
 import * as path from "path";
 import { fileURLToPath } from "url";
