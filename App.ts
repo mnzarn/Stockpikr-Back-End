@@ -1,6 +1,8 @@
 import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
+import * as passport from "passport";
+import * as passportGoogle from "passport-google-oauth20";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { config } from "./config";
@@ -18,6 +20,22 @@ class App {
     this.express = express();
     this.middleware();
     this.routes();
+
+    // Passport configuration
+    this.express.use(passport.initialize());
+    passport.use(
+      new passportGoogle.Strategy(
+        {
+          clientID: config.GOOGLE_CLIENT_ID,
+          clientSecret: config.GOOGLE_CLIENT_SECRET,
+          callbackURL: "http://localhost:3000/dashboard"
+        },
+        (accessToken, refreshToken, profile, done) => {
+          console.log(profile);
+        }
+      )
+    );
+
     this.FMP_API_KEY = "&apikey=" + config.FMP_API_KEY;
   }
 
@@ -40,6 +58,16 @@ class App {
     router.get("/", (req, res, next) => {
       res.send("Express + TypeScript Server");
     });
+
+    router.get(
+      "/login/federated/google",
+      passport.authenticate("google", {
+        scope: ["profile", "email"]
+      }),
+      (req, res) => {
+        res.send("Successful login");
+      }
+    );
 
     this.express.use("/api/users", userRouter);
     this.express.use("/api/watchlists", watchlistRouter);
