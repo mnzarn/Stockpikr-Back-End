@@ -28,7 +28,7 @@ class App {
         {
           clientID: config.GOOGLE_CLIENT_ID,
           clientSecret: config.GOOGLE_CLIENT_SECRET,
-          callbackURL: "http://localhost:3000/dashboard"
+          callbackURL: config.GOOGLE_CALLBACK_URL
         },
         (accessToken, refreshToken, profile, done) => {
           console.log(profile);
