@@ -40,6 +40,17 @@ class App {
     this.express.use(passport.session());
   }
 
+  // Configure Auth Validation
+  validateAuth(req, res, next) {
+    if (req.isAuthenticated()) {
+      console.log("The user is authenticated for this action!");
+      next();
+    } else {
+      console.log("The user is not authenticated for this action!");
+      res.redirect("/");
+    }
+  }
+
   private routes(): void {
     const router = express.Router();
 
@@ -82,24 +93,27 @@ class App {
 
         if (!doesUserExist) {
           console.log("User doesn't exist. Creating a new entry for this user in the DB");
-          let x: any = await this.Users.addUser(
+          let newUser: any = await this.Users.addUser(
             googleProfile.id,
             googleProfile.name.givenName,
             googleProfile.name.familyName,
             googleProfile.emails[0].value,
             "123456789"
           );
-          console.log("New user created with ID: ", x);
+          console.log("New user created with ID: ", newUser);
+          req.session["uuid"] = newUser;
         } else {
           console.log("User already exists, logging in...");
+          req.session["uuid"] = doesUserExist.userID;
         }
 
+        console.log(JSON.parse(JSON.stringify(req.session)), "\nPrinted");
         res.redirect("http://localhost:3000/dashboard");
       }
     );
 
     this.express.use("/api/users", userRouter);
-    this.express.use("/api/watchlists", watchlistRouter);
+    this.express.use("/api/watchlists", watchlistRouter, this.validateAuth);
 
     this.express.use("/", router);
     this.express.use("/images", express.static(path.join(__dirname, "img")));
