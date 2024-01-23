@@ -47,7 +47,7 @@ class App {
       next();
     } else {
       console.log("The user is not authenticated for this action!");
-      res.redirect("/");
+      res.redirect("http://localhost:3000/signin");
     }
   }
 
