@@ -1,11 +1,13 @@
 import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
+import session from "express-session";
 import passport from "passport";
-import * as passportGoogle from "passport-google-oauth20";
 import * as path from "path";
 import { fileURLToPath } from "url";
+import GooglePassport from "./GooglePassport";
 import { config } from "./config";
+import { UserModel } from "./models/UserModel";
 import userRouter from "./routes/users";
 import watchlistRouter from "./routes/watchlists";
 // workaround when using ES module: https://iamwebwiz.medium.com/how-to-fix-dirname-is-not-defined-in-es-module-scope-34d94a86694d
@@ -15,26 +17,16 @@ const __dirname = path.dirname(__filename); // get the name of the directory
 class App {
   public express: express.Application;
   public FMP_API_KEY: string | undefined;
+  public Users: UserModel;
+  public googlePassport: GooglePassport;
 
   constructor() {
+    this.Users = UserModel.getInstance();
     this.express = express();
     this.middleware();
     this.routes();
 
-    // Passport configuration
-    this.express.use(passport.initialize());
-    passport.use(
-      new passportGoogle.Strategy(
-        {
-          clientID: config.GOOGLE_CLIENT_ID,
-          clientSecret: config.GOOGLE_CLIENT_SECRET,
-          callbackURL: config.GOOGLE_CALLBACK_URL
-        },
-        (accessToken, refreshToken, profile, done) => {
-          console.log(profile);
-        }
-      )
-    );
+    this.googlePassport = new GooglePassport();
 
     this.FMP_API_KEY = "&apikey=" + config.FMP_API_KEY;
   }
@@ -43,6 +35,9 @@ class App {
     this.express.use(cors());
     this.express.use(bodyParser.json());
     this.express.use(bodyParser.urlencoded({ extended: false }));
+    this.express.use(session({ secret: "toxic flamingo" }));
+    this.express.use(passport.initialize());
+    this.express.use(passport.session());
   }
 
   private routes(): void {
@@ -66,6 +61,40 @@ class App {
       }),
       (req, res) => {
         res.send("Successful login");
+      }
+    );
+
+    router.get(
+      "/login/federated/google/callback",
+      (req, res, next) => {
+        req.session.save();
+        next();
+      },
+      passport.authenticate("google", {
+        failureRedirect: "http://localhost:3000/signin"
+      }),
+      async (req, res) => {
+        console.log("Successful login");
+
+        const googleProfile: any = JSON.parse(JSON.stringify(req.user));
+        console.log("Here is the google profile details \n", googleProfile);
+        let doesUserExist: any = await this.Users.getUserByAuth(googleProfile.id);
+
+        if (!doesUserExist) {
+          console.log("User doesn't exist. Creating a new entry for this user in the DB");
+          let x: any = await this.Users.addUser(
+            googleProfile.id,
+            googleProfile.name.givenName,
+            googleProfile.name.familyName,
+            googleProfile.emails[0].value,
+            "123456789"
+          );
+          console.log("New user created with ID: ", x);
+        } else {
+          console.log("User already exists, logging in...");
+        }
+
+        res.redirect("http://localhost:3000/dashboard");
       }
     );
 
