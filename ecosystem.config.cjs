@@ -12,9 +12,9 @@ module.exports = {
       user: "duclepham",
       host: ["172.200.217.33"],
       ref: "origin/main",
-      repo: "git@github.com:Ring-A-Bell/StockPikr.git",
-      path: "/home/duclepham",
-      "pre-deploy": "cp ~/.env /home/duclepham/source/.env && yarn"
+      repo: "git@github.com-stockpikr:Ring-A-Bell/StockPikr.git",
+      path: "/home/duclepham"
+      // "pre-deploy": "cp ~/.env /home/duclepham/source/.env && yarn"
     }
   }
 };
