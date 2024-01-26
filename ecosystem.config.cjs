@@ -9,7 +9,7 @@ module.exports = {
   deploy: {
     production: {
       key: "~/.ssh/id_rsa",
-      user: "duclepham",
+      user: "root",
       host: ["172.200.217.33"],
       ref: "origin/main",
       repo: "git@github.com:Ring-A-Bell/StockPikr.git",
