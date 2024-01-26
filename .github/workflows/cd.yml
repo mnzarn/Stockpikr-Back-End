@@ -31,7 +31,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
 
       - name: Deploy to production
-        run: sudo pm2 deploy production --force
+        run: pm2 deploy production --force
 
       - name: Clean up ssh keys
         run: rm -rf ~/.ssh/
