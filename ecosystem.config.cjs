@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "stockpikr",
-      script: "./index.js",
+      script: "./index.ts",
       cwd: "/home/duclepham/source"
     }
   ],
