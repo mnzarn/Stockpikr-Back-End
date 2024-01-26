@@ -21,7 +21,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install pm2
-        run: npm install -g pm2
+        run: sudo npm install -g pm2
 
       - name: Setup ssh keys
         run: |
@@ -29,9 +29,6 @@ jobs:
           echo "${{ secrets.STOCKPIKR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/id_rsa
-
-      - name: Setup production
-        run: sudo pm2 deploy production setup
 
       - name: Deploy to production
         run: sudo pm2 deploy production --force
