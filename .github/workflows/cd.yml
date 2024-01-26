@@ -25,13 +25,13 @@ jobs:
 
       - name: Setup ssh keys
         run: |
-          mkdir -p ~/.ssh/
-          echo "${{ secrets.STOCKPIKR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/id_rsa
+          mkdir -p /root/.ssh/
+          echo "${{ secrets.STOCKPIKR_SSH_PRIVATE_KEY }}" > /root/.ssh/id_rsa
+          echo "${{ secrets.KNOWN_HOSTS }}" > /root/.ssh/known_hosts
+          chmod 600 /root/.ssh/id_rsa
 
       - name: Deploy to production
         run: sudo pm2 deploy production --force
 
       - name: Clean up ssh keys
-        run: rm -rf ~/.ssh/
+        run: sudo rm -rf /root/.ssh/
