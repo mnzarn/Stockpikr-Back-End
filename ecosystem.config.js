@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "stockpikr",
-      script: "./index.ts",
+      script: "./dist/index.js",
       cwd: "~/stockpikr/source"
     }
   ],
@@ -15,7 +15,7 @@ module.exports = {
       repo: "git@github.com:Ring-A-Bell/StockPikr.git",
       path: "~/stockpikr",
       "post-setup": "cp ~/.env ~/stockpikr/source/.env",
-      "pre-deploy": "yarn"
+      "pre-deploy": "yarn && yarn build"
     }
   }
 };
