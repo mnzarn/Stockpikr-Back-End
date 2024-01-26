@@ -31,10 +31,10 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
 
       - name: Setup production
-        run: pm2 deploy production setup
+        run: sudo pm2 deploy production setup
 
       - name: Deploy to production
-        run: pm2 deploy production --force
+        run: sudo pm2 deploy production --force
 
       - name: Clean up ssh keys
         run: rm -rf ~/.ssh/
