@@ -29,6 +29,10 @@ jobs:
           echo "${{ secrets.STOCKPIKR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/id_rsa
+
+      - name: Setup production
+        run: pm2 deploy production setup
+
       - name: Deploy to production
         run: pm2 deploy production --force
 
