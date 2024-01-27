@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "stockpikr",
       script: "./index.ts",
-      intepreter: "tsx"
+      interpreter: "tsx"
     }
   ],
   deploy: {
