@@ -132,6 +132,15 @@ class App {
       watchlistRouter(req, res, next);
     });
 
+    // Test routes
+    this.express.use("/test/api/users", (req, res, next) => {
+      userRouter(req, res, next);
+    });
+
+    this.express.use("/test/api/watchlists", (req, res, next) => {
+      watchlistRouter(req, res, next);
+    });
+
     this.express.use("/", router);
     this.express.use("/images", express.static(path.join(__dirname, "img")));
     this.express.use("/", express.static(path.join(__dirname, "pages")));

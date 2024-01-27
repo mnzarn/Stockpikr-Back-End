@@ -22,7 +22,7 @@ describe("test-watchlist-apis", () => {
 
     supertest
       .agent(server)
-      .get("/api/watchlists")
+      .get("/test/api/watchlists")
       .expect(200)
       .end(function (err, res) {
         console.log("res: ", res.body);
