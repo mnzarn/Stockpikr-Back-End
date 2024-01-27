@@ -2,8 +2,7 @@ module.exports = {
   apps: [
     {
       name: "stockpikr",
-      script: "./index.ts",
-      cwd: "~/stockpikr/source"
+      script: "./index.ts"
     }
   ],
   deploy: {
@@ -14,6 +13,7 @@ module.exports = {
       ref: "origin/cicd/pipeline",
       repo: "git@github.com-stockpikr:Ring-A-Bell/StockPikr.git",
       path: "/home/duclepham/stockpikr",
+      "pre-setup": "rm -rf ~/stockpikr",
       "pre-deploy": "cp ~/.env ~/stockpikr/source/.env && yarn"
     }
   }
