@@ -9,7 +9,7 @@ module.exports = {
       path: "/home/duclepham/stockpikr",
       "pre-setup": "npm install -g tsx && rm -rf ~/stockpikr",
       "post-setup": "cp ~/.env ~/stockpikr/source/.env",
-      "post-deploy": "cd ~/stockpikr/source/ && yarn && pm2 start --interpreter tsx --name stockpikr index.ts"
+      "post-deploy": "cd ~/stockpikr/source/ && yarn && pm2 startOrRestart --interpreter tsx --name stockpikr index.ts"
     }
   }
 };
