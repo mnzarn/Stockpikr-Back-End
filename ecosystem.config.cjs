@@ -13,7 +13,7 @@ module.exports = {
       host: ["172.200.217.33"],
       ref: "origin/cicd/pipeline",
       repo: "git@github.com-stockpikr:Ring-A-Bell/StockPikr.git",
-      path: "~/stockpikr",
+      path: "/home/duclepham/stockpikr",
       "pre-deploy": "cp ~/.env ~/stockpikr/source/.env && yarn"
     }
   }
