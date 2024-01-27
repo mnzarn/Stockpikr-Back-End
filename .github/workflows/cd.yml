@@ -26,9 +26,9 @@ jobs:
       - name: Setup ssh keys
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.STOCKPIKR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.STOCKPIKR_SSH_PRIVATE_KEY }}" > ~/.ssh/stockpikr_id_rsa
           echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/stockpikr_id_rsa
 
       - name: Setup production
         run: pm2 deploy production setup
