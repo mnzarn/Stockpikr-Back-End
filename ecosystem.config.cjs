@@ -11,7 +11,7 @@ module.exports = {
       key: "~/.ssh/stockpikr_id_rsa",
       user: "duclepham",
       host: ["172.200.217.33"],
-      ref: "origin/cicd/pipeline",
+      ref: "origin/main",
       repo: "git@github.com-stockpikr:Ring-A-Bell/StockPikr.git",
       path: "/home/duclepham/stockpikr",
       "pre-setup": "npm install -g tsx && rm -rf ~/stockpikr",
