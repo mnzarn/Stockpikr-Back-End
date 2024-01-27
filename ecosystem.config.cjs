@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "stockpikr",
       script: "./index.ts",
-      cwd: "/home/duclepham/source"
+      cwd: "/home/duclepham/stockpikr/source"
     }
   ],
   deploy: {
@@ -11,10 +11,10 @@ module.exports = {
       key: "~/.ssh/id_rsa",
       user: "duclepham",
       host: ["172.200.217.33"],
-      ref: "origin/main",
+      ref: "origin/cicd/pipeline",
       repo: "git@github.com-stockpikr:Ring-A-Bell/StockPikr.git",
-      path: "/home/duclepham"
-      // "pre-deploy": "cp ~/.env /home/duclepham/source/.env && yarn"
+      path: "/home/duclepham/stockpikr",
+      "pre-deploy": "cp ~/.env /home/duclepham/source/.env && yarn"
     }
   }
 };
