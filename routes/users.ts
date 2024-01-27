@@ -13,7 +13,8 @@ export const getUserById = (id: string) => {};
 //Get one user by ID
 userRouter.get("/:id", async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const id = req.session["uuid"] ? req.session["uuid"] : req.params.id;
+    console.log("Here is the id: ", id);
     const user = await Users.getUserByID(id);
     if (user) {
       res.json(user);
@@ -44,7 +45,8 @@ userRouter.get("/", async (req, res, next) => {
 //Update user information by ID
 userRouter.put("/:id", async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const id = req.session["uuid"] ? req.session["uuid"] : req.params.id;
+    console.log("Here is the id: ", id);
     const { firstName, lastName, email, phoneNumber } = req.body;
 
     const updatedUser = await Users.updateUser(id, firstName, lastName, email, phoneNumber);

@@ -38,7 +38,8 @@ watchlistRouter.get("/", async (req, res, next) => {
 //Get all watchlists by userID
 watchlistRouter.get("/user/:id", async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const id = req.session["uuid"] ? req.session["uuid"] : req.params.id;
+    console.log("Here is the id: ", id);
     const watchlists = await Watchlists.getWatchlistsByUserID(id);
     if (watchlists) {
       res.json(watchlists);

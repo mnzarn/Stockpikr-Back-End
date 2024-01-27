@@ -88,7 +88,6 @@ class App {
         console.log("Successful login");
 
         const googleProfile: any = JSON.parse(JSON.stringify(req.user));
-        console.log("Here is the google profile details \n", googleProfile);
         let doesUserExist: any = await this.Users.getUserByAuth(googleProfile.id);
 
         if (!doesUserExist) {
@@ -106,14 +105,32 @@ class App {
           console.log("User already exists, logging in...");
           req.session["uuid"] = doesUserExist.userID;
         }
+        req.session.save();
+        console.log("Session info has been saved as follows - ", req.session);
 
-        console.log(JSON.parse(JSON.stringify(req.session)), "\nPrinted");
+        // TODO: Have to change this to a relative link, otherwise the session information is lost
+        // Solution is to inject frontend build files into the backend and serve them
         res.redirect("http://localhost:3000/dashboard");
       }
     );
 
-    this.express.use("/api/users", userRouter);
-    this.express.use("/api/watchlists", watchlistRouter, this.validateAuth);
+    router.get("/logout", (req, res) => {
+      req.session.destroy((err) => {
+        if (err) {
+          console.log("Error destroying session:", err);
+          return res.status(500).send("Internal Server Error");
+        }
+        res.redirect("http://localhost:3000/signin");
+      });
+    });
+
+    this.express.use("/api/users", this.validateAuth, (req, res, next) => {
+      userRouter(req, res, next);
+    });
+
+    this.express.use("/api/watchlists", this.validateAuth, (req, res, next) => {
+      watchlistRouter(req, res, next);
+    });
 
     this.express.use("/", router);
     this.express.use("/images", express.static(path.join(__dirname, "img")));
