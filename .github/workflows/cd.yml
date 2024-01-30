@@ -1,0 +1,39 @@
+name: deploy-stockpikr-backend
+
+on:
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        node-version: ["20"]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install pm2
+        run: sudo npm install -g pm2
+
+      - name: Setup ssh keys
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.STOCKPIKR_SSH_PRIVATE_KEY }}" > ~/.ssh/stockpikr_id_rsa
+          echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/stockpikr_id_rsa
+
+      - name: Setup production
+        run: pm2 deploy production setup
+      - name: Deploy to production
+        run: pm2 deploy production --force
+
+      - name: Clean up ssh keys
+        run: rm -rf ~/.ssh/
