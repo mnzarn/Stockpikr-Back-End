@@ -2,7 +2,7 @@ import Mongoose from "mongoose";
 import { config } from "./config";
 
 class DataAccess {
-  static mongooseInstance: any;
+  static mongooseInstance: Promise<any>;
   static mongooseConnection: Mongoose.Connection;
   static DB_CONNECTION_STRING: string = config.DB_CONNECTION_STRING;
 
@@ -10,7 +10,7 @@ class DataAccess {
     DataAccess.connect();
   }
 
-  static connect(): Mongoose.Connection {
+  static connect(): Promise<Mongoose.Connection> {
     if (this.mongooseInstance) return this.mongooseInstance;
 
     this.mongooseConnection = Mongoose.connection;

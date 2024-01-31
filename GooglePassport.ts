@@ -4,27 +4,29 @@ import { config } from "./config";
 
 class GooglePassport {
   constructor() {
-    passport.use(
-      new GoogleStrategy(
-        {
-          clientID: config.GOOGLE_CLIENT_ID,
-          clientSecret: config.GOOGLE_CLIENT_SECRET,
-          callbackURL: config.GOOGLE_CALLBACK_URL
-        },
-        (accessToken, refreshToken, profile, done) => {
-          //console.log(profile);
-          done(null, profile);
-        }
-      )
-    );
+    if (config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET && config.GOOGLE_CALLBACK_URL) {
+      passport.use(
+        new GoogleStrategy(
+          {
+            clientID: config.GOOGLE_CLIENT_ID,
+            clientSecret: config.GOOGLE_CLIENT_SECRET,
+            callbackURL: config.GOOGLE_CALLBACK_URL
+          },
+          (accessToken, refreshToken, profile, done) => {
+            //console.log(profile);
+            done(null, profile);
+          }
+        )
+      );
 
-    passport.serializeUser((user, done) => {
-      done(null, user);
-    });
+      passport.serializeUser((user, done) => {
+        done(null, user);
+      });
 
-    passport.deserializeUser((user: any, done) => {
-      done(null, user);
-    });
+      passport.deserializeUser((user: any, done) => {
+        done(null, user);
+      });
+    }
   }
 }
 

@@ -1,9 +1,15 @@
 import mongoose from "mongoose";
 
 interface IWatchlistModel extends mongoose.Document {
-    watchlistID: string,
-    userID: string,
-    tickers: string[],
+  watchlistName: string; // for simplicity, we can use watchlist name as a unique identifier
+  userID: string;
+  tickers: Ticker[];
 }
 
-export { IWatchlistModel }
+interface Ticker {
+  symbol: string; // should be unique
+  alertPrice: number;
+  name?: string;
+}
+
+export { IWatchlistModel, Ticker };

@@ -4,10 +4,12 @@ import express from "express";
 import session from "express-session";
 import passport from "passport";
 import * as path from "path";
+import { Middleware } from "services/middleware";
 import { fileURLToPath } from "url";
 import GooglePassport from "./GooglePassport";
 import { config } from "./config";
 import { UserModel } from "./models/UserModel";
+import stockDataRouter from "./routes/stockPrice";
 import userRouter from "./routes/users";
 import watchlistRouter from "./routes/watchlists";
 // workaround when using ES module: https://iamwebwiz.medium.com/how-to-fix-dirname-is-not-defined-in-es-module-scope-34d94a86694d
@@ -20,11 +22,11 @@ class App {
   public Users: UserModel;
   public googlePassport: GooglePassport;
 
-  constructor() {
+  constructor(middleware: Middleware) {
     this.Users = UserModel.getInstance();
     this.express = express();
     this.middleware();
-    this.routes();
+    this.routes(middleware);
 
     this.googlePassport = new GooglePassport();
 
@@ -40,18 +42,7 @@ class App {
     this.express.use(passport.session());
   }
 
-  // Configure Auth Validation
-  validateAuth(req, res, next) {
-    if (req.isAuthenticated()) {
-      console.log("The user is authenticated for this action!");
-      next();
-    } else {
-      console.log("The user is not authenticated for this action!");
-      res.redirect("http://localhost:3000/signin");
-    }
-  }
-
-  private routes(): void {
+  private routes(middleware: Middleware): void {
     const router = express.Router();
 
     router.use((req, res, next) => {
@@ -124,13 +115,21 @@ class App {
       });
     });
 
-    this.express.use("/api/users", this.validateAuth, (req, res, next) => {
-      userRouter(req, res, next);
-    });
+    this.express.use(
+      "/api/users",
+      middleware ? middleware.validateAuth : (req, res, next) => next(),
+      (req, res, next) => {
+        userRouter(req, res, next);
+      }
+    );
 
-    this.express.use("/api/watchlists", this.validateAuth, (req, res, next) => {
-      watchlistRouter(req, res, next);
-    });
+    this.express.use(
+      "/api/watchlists",
+      middleware ? middleware.validateAuth : (req, res, next) => next(),
+      (req, res, next) => {
+        watchlistRouter(req, res, next);
+      }
+    );
 
     // Test routes
     this.express.use("/test/api/users", (req, res, next) => {
@@ -141,6 +140,7 @@ class App {
       watchlistRouter(req, res, next);
     });
 
+    this.express.use("/api/stockdata", stockDataRouter);
     this.express.use("/", router);
     this.express.use("/images", express.static(path.join(__dirname, "img")));
     this.express.use("/", express.static(path.join(__dirname, "pages")));

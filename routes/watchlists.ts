@@ -4,11 +4,10 @@ import { WatchlistModel } from "../models/WatchlistModel";
 const watchlistRouter = Router();
 export const Watchlists = new WatchlistModel();
 
-//Get one watchlist by ID
-watchlistRouter.get("/:id", async (req, res, next) => {
+watchlistRouter.get("/:name", async (req, res, next) => {
   try {
-    const id = req.params.id;
-    const watchlist = await Watchlists.getWatchlistByID(id);
+    const { name } = req.params;
+    const watchlist = await Watchlists.getWatchlist(name);
     if (watchlist) {
       res.json(watchlist);
     } else {
@@ -23,6 +22,7 @@ watchlistRouter.get("/:id", async (req, res, next) => {
 //Get all watchlists
 watchlistRouter.get("/", async (req, res, next) => {
   try {
+    // TODO: add pagination to avoid ddos
     const watchlists = await Watchlists.getWatchlists();
     if (watchlists.length > 0) {
       res.status(200).json(watchlists);
@@ -53,12 +53,14 @@ watchlistRouter.get("/user/:id", async (req, res, next) => {
 });
 
 //Update watchlist information by ID
-watchlistRouter.put("/:id", async (req, res, next) => {
+watchlistRouter.put("/:name", async (req, res, next) => {
   try {
-    const id = req.params.id;
+    // TODO: validate wl id, user id, and body
+    const { name: watchlistName } = req.params;
+    const userID = req.query.userId as string;
     const { tickers } = req.body;
 
-    const updatedWatchlist = await Watchlists.updateWatchlist(id, tickers);
+    const updatedWatchlist = await Watchlists.updateWatchlist(watchlistName, userID, { tickers });
 
     res.status(200).json(updatedWatchlist);
   } catch (error) {
@@ -70,9 +72,13 @@ watchlistRouter.put("/:id", async (req, res, next) => {
 //Add watchlist
 watchlistRouter.post("/", async (req, res, next) => {
   try {
-    const { userID, tickers } = req.body;
+    const { userID, tickers, watchlistName } = req.body;
+    const watchlist = await Watchlists.getWatchlistByWatchlistNameAndUserId(userID, watchlistName);
+    if (watchlist) {
+      return res.status(403).json({ error: "Watchlist with the given name and id already exists. Cannot add new." });
+    }
 
-    const watchlistID = await Watchlists.addWatchlist(userID, tickers);
+    const watchlistID = await Watchlists.addWatchlist(userID, watchlistName, tickers);
 
     res.status(200).json(watchlistID);
   } catch (error) {
@@ -82,11 +88,11 @@ watchlistRouter.post("/", async (req, res, next) => {
 });
 
 //Delete watchlist
-watchlistRouter.delete("/:id", async (req, res, next) => {
+watchlistRouter.delete("/:name", async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const {name: watchlistName} = req.params;
 
-    const deletedWatchlist = await Watchlists.deleteWatchlist(id);
+    const deletedWatchlist = await Watchlists.deleteWatchlist(watchlistName);
 
     res.status(200).json(deletedWatchlist);
   } catch (error) {
