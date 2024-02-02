@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
+import { IStockQuote } from "interfaces/IStockQuote";
 import { config } from "../config";
 import { ICompanyProfile } from "../interfaces/ICompanyProfile";
 import IStockData from "../interfaces/IStockData";
@@ -61,6 +62,17 @@ export class StockApiService {
     const searchQueryLimit = limit ? Math.min(limit, 100) : 10; // maximum limit is 100 per query
     const url = `/v3/search?query=${input}&limit=${searchQueryLimit}`;
     const response = await StockApiService.fetchData<IStockData[]>(url);
+    if (response) {
+      return response;
+    }
+    return [];
+  }
+  public static async fetchStockQuotes(input: string): Promise<IStockQuote[]> {
+    if (input.trim().length === 0) {
+      return [];
+    }
+    const url = `/v3/quote/${input}`;
+    const response = await StockApiService.fetchData<IStockQuote[]>(url);
     if (response) {
       return response;
     }

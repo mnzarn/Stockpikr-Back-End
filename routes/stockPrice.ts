@@ -46,6 +46,21 @@ stockDataRouter.get("/", async (req, res, next) => {
   }
 });
 
+stockDataRouter.get("/quote/:value", async (req, res, next) => {
+  try {
+    const { value } = req.params;
+    const stockQuotes = await StockApiService.fetchStockQuotes(value);
+    if (stockQuotes) {
+      res.json(stockQuotes);
+    } else {
+      res.status(404).json({ error: "Stock quotes not found" });
+    }
+  } catch (error) {
+    console.error("Error fetching stockData data:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 //Update user information by ID
 stockDataRouter.put("/:symbol", async (req, res, next) => {
   try {
