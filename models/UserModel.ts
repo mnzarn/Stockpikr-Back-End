@@ -1,21 +1,14 @@
-import { Schema } from "mongoose";
+import Mongoose, { Schema } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import { DataAccess } from "../DataAccess";
 import { IUserModel } from "../interfaces/IUserModel";
+import BaseModel from "./BaseModel";
 
-let mongooseConnection = DataAccess.mongooseConnection;
-let mongooseObj = DataAccess.mongooseInstance;
-
-async () => {
-  mongooseConnection = await mongooseObj;
-};
-
-class UserModel {
-  public schema: Schema;
+class UserModel extends BaseModel {
   public model: any;
   private static instance: UserModel;
 
-  public constructor() {
+  public constructor(connection: Mongoose.Connection) {
+    super(connection);
     this.createSchema();
     this.createModel();
   }
@@ -37,16 +30,16 @@ class UserModel {
   };
 
   public createModel = () => {
-    if (!mongooseConnection.models["users"]) {
-      this.model = mongooseConnection.model<IUserModel>("users", this.schema);
+    if (!this.connection.models["users"]) {
+      this.model = this.connection.model<IUserModel>("users", this.schema);
     } else {
-      this.model = mongooseConnection.models["users"];
+      this.model = this.connection.models["users"];
     }
   };
 
-  public static getInstance(): UserModel {
+  public static getInstance(connection: Mongoose.Connection): UserModel {
     if (!UserModel.instance) {
-      UserModel.instance = new UserModel();
+      UserModel.instance = new UserModel(connection);
     }
     return UserModel.instance;
   }

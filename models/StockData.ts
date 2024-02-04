@@ -1,16 +1,14 @@
-import { Model, Schema } from "mongoose";
-import { DataAccess } from "../DataAccess";
+import { Connection, Model, Schema } from "mongoose";
 import IStockData from "../interfaces/IStockData";
+import BaseModel from "./BaseModel";
 
-class StockDataModel {
-  public schema: Schema;
+class StockDataModel extends BaseModel {
   public model: Model<IStockData>;
 
-  public constructor() {
-    DataAccess.mongooseInstance.then(() => {
-      this.createSchema();
-      this.createModel();
-    });
+  public constructor(connection: Connection) {
+    super(connection);
+    this.createSchema();
+    this.createModel();
   }
 
   public createSchema(): void {
@@ -30,8 +28,7 @@ class StockDataModel {
   }
 
   public async createModel() {
-    await DataAccess.connect();
-    this.model = DataAccess.mongooseConnection.model<IStockData>("stock-data", this.schema);
+    this.model = this.connection.model<IStockData>("stock-data", this.schema);
   }
 
   public async addStockData(stockData: IStockData) {

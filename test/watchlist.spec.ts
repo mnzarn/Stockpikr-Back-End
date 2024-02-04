@@ -1,19 +1,39 @@
 import * as chai from "chai";
+// import { MongoMemoryServer } from "mongodb-memory-server";
+// import mongoose from "mongoose";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import supertest from "supertest";
 import { App } from "supertest/types";
-import { Watchlists } from "../routes/watchlists";
+import { WatchlistModel } from "../models/WatchlistModel";
 import { initServer } from "../server";
 import { ParamTest } from "./api-test-param-type";
+
 // Configure chai
 chai.use(sinonChai);
 const expect = chai.expect;
 const sandbox = sinon.createSandbox();
+// let mongoServer: MongoMemoryServer;
+// let mongoInstance;
+
+// before(async () => {
+//   mongoServer = await MongoMemoryServer.create();
+//   const mongoUri = mongoServer.getUri();
+//   console.log("mongo uri: ", mongoUri);
+//   mongoInstance = await mongoose.connect(mongoUri);
+//   console.log("mongo instance: ", mongoInstance);
+// });
+
+// after(async () => {
+//   await mongoose.disconnect();
+//   await mongoServer.stop();
+// });
 
 describe("test-watchlist-apis", () => {
   let server: App;
-  server = initServer();
+  let watchlistModel: WatchlistModel = new WatchlistModel(undefined);
+  server = initServer({ watchlistModel });
+  before(async () => {});
   beforeEach(() => {
     // forcefully restore sandbox to allow re-write of findOneStub
     sandbox.restore();
@@ -33,8 +53,8 @@ describe("test-watchlist-apis", () => {
   getWatchlistsTcs.forEach((tc) => {
     it(`test get all watchlists with endpoint /api/watchlists should response status ${tc[1]}`, (done) => {
       // fixture, mock getWatchlists db call so we can evaluate the apis
-      if (tc[3]) sandbox.stub(Watchlists, "getWatchlists").throws();
-      else sandbox.stub(Watchlists, "getWatchlists").resolves(tc[0]);
+      if (tc[3]) sandbox.stub(watchlistModel, "getWatchlists").throws();
+      else sandbox.stub(watchlistModel, "getWatchlists").resolves(tc[0]);
 
       supertest
         .agent(server)
@@ -62,8 +82,8 @@ describe("test-watchlist-apis", () => {
   getWatchlistTcs.forEach((tc) => {
     it(`test get watchlist by id with endpoint api/watchlists/:name should response status ${tc[1]}`, (done) => {
       // fixture, mock getWatchlists db call so we can evaluate the apis
-      if (tc[3]) sandbox.stub(Watchlists, "getWatchlist").throws();
-      else sandbox.stub(Watchlists, "getWatchlist").resolves(tc[0].wl);
+      if (tc[3]) sandbox.stub(watchlistModel, "getWatchlist").throws();
+      else sandbox.stub(watchlistModel, "getWatchlist").resolves(tc[0].wl);
 
       supertest
         .agent(server)
@@ -80,5 +100,10 @@ describe("test-watchlist-apis", () => {
           }
         });
     });
+  });
+
+  it("test-getWatchlists-in-memory-mongo", async () => {
+    // const watchlists = await watchlistModel.getWatchlists();
+    // console.log("watchlists: ", watchlists);
   });
 });

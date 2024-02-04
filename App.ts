@@ -2,6 +2,8 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
 import session from "express-session";
+import { StockDataModel } from "models/StockData";
+import { WatchlistModel } from "models/WatchlistModel";
 import passport from "passport";
 import * as path from "path";
 import { Middleware } from "services/middleware";
@@ -9,28 +11,44 @@ import { fileURLToPath } from "url";
 import GooglePassport from "./GooglePassport";
 import { config } from "./config";
 import { UserModel } from "./models/UserModel";
-import stockDataRouter from "./routes/stockPrice";
-import userRouter from "./routes/users";
-import watchlistRouter from "./routes/watchlists";
+import stockDataRouterHandler from "./routes/stockPrice";
+import userRouterHandler from "./routes/users";
+import watchlistRouterHandler from "./routes/watchlists";
 // workaround when using ES module: https://iamwebwiz.medium.com/how-to-fix-dirname-is-not-defined-in-es-module-scope-34d94a86694d
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
+export interface Models {
+  userModel?: UserModel;
+  stockDataModel?: StockDataModel;
+  watchlistModel?: WatchlistModel;
+}
+
 class App {
   public express: express.Application;
   public FMP_API_KEY: string | undefined;
-  public Users: UserModel;
   public googlePassport: GooglePassport;
 
-  constructor(middleware: Middleware) {
-    this.Users = UserModel.getInstance();
+  // depdendency injection for middleware & mongo models for easy testing
+  private middlewareInstance: Middleware;
+  private userModel: UserModel;
+  private watchlistModel: WatchlistModel;
+  private stockDataModel: StockDataModel;
+
+  constructor(models: Models) {
     this.express = express();
     this.middleware();
-    this.routes(middleware);
-
     this.googlePassport = new GooglePassport();
-
     this.FMP_API_KEY = "&apikey=" + config.FMP_API_KEY;
+    const {userModel, stockDataModel, watchlistModel} = models;
+    this.userModel = userModel
+    this.stockDataModel = stockDataModel;
+    this.watchlistModel = watchlistModel;
+  }
+
+  withMiddleware(middleware: Middleware) {
+    this.middlewareInstance = middleware;
+    return this;
   }
 
   private middleware(): void {
@@ -42,8 +60,12 @@ class App {
     this.express.use(passport.session());
   }
 
-  private routes(middleware: Middleware): void {
+  public routes(): void {
     const router = express.Router();
+    // setup all custom routers
+    const userRouter = userRouterHandler(this.userModel);
+    const stockDataRouter = stockDataRouterHandler(this.stockDataModel);
+    const watchlistRouter = watchlistRouterHandler(this.watchlistModel);
 
     router.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", "*");
@@ -79,11 +101,11 @@ class App {
         console.log("Successful login");
 
         const googleProfile: any = JSON.parse(JSON.stringify(req.user));
-        let doesUserExist: any = await this.Users.getUserByAuth(googleProfile.id);
+        let doesUserExist: any = await this.userModel.getUserByAuth(googleProfile.id);
 
         if (!doesUserExist) {
           console.log("User doesn't exist. Creating a new entry for this user in the DB");
-          let newUser: any = await this.Users.addUser(
+          let newUser: any = await this.userModel.addUser(
             googleProfile.id,
             googleProfile.name.givenName,
             googleProfile.name.familyName,
@@ -117,28 +139,24 @@ class App {
 
     this.express.use(
       "/api/users",
-      middleware ? middleware.validateAuth : (req, res, next) => next(),
-      (req, res, next) => {
-        userRouter(req, res, next);
-      }
+      this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
+      userRouter
     );
 
     this.express.use(
       "/api/watchlists",
-      middleware ? middleware.validateAuth : (req, res, next) => next(),
-      (req, res, next) => {
-        watchlistRouter(req, res, next);
-      }
+      this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
+      watchlistRouter
     );
 
     // Test routes
-    this.express.use("/test/api/users", (req, res, next) => {
-      userRouter(req, res, next);
-    });
+    // this.express.use("/test/api/users", (req, res, next) => {
+    //   userRouter(req, res, next);
+    // });
 
-    this.express.use("/test/api/watchlists", (req, res, next) => {
-      watchlistRouter(req, res, next);
-    });
+    // this.express.use("/test/api/watchlists", (req, res, next) => {
+    //   watchlistRouter(req, res, next);
+    // });
 
     this.express.use("/api/stockdata", stockDataRouter);
     this.express.use("/", router);

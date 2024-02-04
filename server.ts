@@ -1,14 +1,9 @@
-import { App } from "./App";
-import { config } from "./config";
+import { App, Models } from "./App";
 import { Middleware } from "./services/middleware";
 
-export const initServer = (middleware?: Middleware) => {
-  const port = config.PORT as number;
-  const host = "0.0.0.0";
-  const app = new App(middleware);
+export const initServer = (models: Models, middleware?: Middleware) => {
+  let app = new App(models).withMiddleware(middleware);
+  app.routes();
   const server = app.express;
-  server.listen(port, host, async () => {
-    console.log(`⚡️[server]: Server is running at http://${host}:${port}`);
-  });
   return server;
 };

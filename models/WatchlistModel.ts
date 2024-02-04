@@ -1,16 +1,14 @@
-import { Model, Schema } from "mongoose";
-import { DataAccess } from "../DataAccess";
+import { Connection, Model, Schema } from "mongoose";
 import { IWatchlistModel, Ticker } from "../interfaces/IWatchlistModel";
+import BaseModel from "./BaseModel";
 
-class WatchlistModel {
-  public schema: Schema;
+class WatchlistModel extends BaseModel {
   public model: Model<IWatchlistModel>;
 
-  public constructor() {
-    DataAccess.mongooseInstance.then(() => {
-      this.createSchema();
-      this.createModel();
-    });
+  public constructor(connection: Connection) {
+    super(connection);
+    this.createSchema();
+    this.createModel();
   }
 
   public createSchema(): void {
@@ -28,8 +26,7 @@ class WatchlistModel {
   }
 
   public async createModel() {
-    await DataAccess.connect();
-    this.model = DataAccess.mongooseConnection.model<IWatchlistModel>("watchlists", this.schema);
+    this.model = this.connection.model<IWatchlistModel>("watchlists", this.schema);
   }
 
   public async addWatchlist(userID: string, watchlistName: string, tickers: Ticker[]) {
@@ -64,7 +61,7 @@ class WatchlistModel {
     return this.model.find();
   }
 
-  public async deleteWatchlist(watchlistName: string) {
+  public async deleteWatchlist(watchlistName: string): Promise<any> {
     return this.model.deleteOne({ watchlistName });
   }
 }

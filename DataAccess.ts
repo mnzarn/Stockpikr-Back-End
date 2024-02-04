@@ -2,15 +2,15 @@ import Mongoose from "mongoose";
 import { config } from "./config";
 
 class DataAccess {
-  static mongooseInstance: Promise<any>;
+  static mongooseInstance: any;
   static mongooseConnection: Mongoose.Connection;
   static DB_CONNECTION_STRING: string = config.DB_CONNECTION_STRING;
 
-  constructor() {
-    DataAccess.connect();
+  constructor(dbConnectionString?: string) {
+    DataAccess.connect(dbConnectionString);
   }
 
-  static connect(): Promise<Mongoose.Connection> {
+  static connect(dbConnectionString?: string): Promise<Mongoose.Connection> {
     if (this.mongooseInstance) return this.mongooseInstance;
 
     this.mongooseConnection = Mongoose.connection;
@@ -18,9 +18,12 @@ class DataAccess {
       console.log("Connected to mongodb.");
     });
 
-    this.mongooseInstance = Mongoose.connect(this.DB_CONNECTION_STRING);
+    this.mongooseInstance = Mongoose.connect(dbConnectionString ?? this.DB_CONNECTION_STRING);
     return this.mongooseInstance;
   }
+
+  static disconnect() {
+    return Mongoose.disconnect();
+  }
 }
-DataAccess.connect();
 export { DataAccess };
