@@ -14,12 +14,11 @@ chai.use(sinonChai);
 const expect = chai.expect;
 const sandbox = sinon.createSandbox();
 let mongoServer: MongoMemoryServer;
-let mongoInstance;
 
 before(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
-  mongoInstance = await mongoose.connect(mongoUri);
+  await mongoose.connect(mongoUri);
 });
 
 after(async () => {

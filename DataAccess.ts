@@ -6,11 +6,11 @@ class DataAccess {
   static mongooseConnection: Mongoose.Connection;
   static DB_CONNECTION_STRING: string = config.DB_CONNECTION_STRING;
 
-  constructor(dbConnectionString?: string) {
-    DataAccess.connect(dbConnectionString);
+  constructor() {
+    DataAccess.connect();
   }
 
-  static connect(dbConnectionString?: string): Promise<Mongoose.Connection> {
+  static connect(): Promise<Mongoose.Connection> {
     if (this.mongooseInstance) return this.mongooseInstance;
 
     this.mongooseConnection = Mongoose.connection;
@@ -18,7 +18,7 @@ class DataAccess {
       console.log("Connected to mongodb.");
     });
 
-    this.mongooseInstance = Mongoose.connect(dbConnectionString ?? this.DB_CONNECTION_STRING);
+    this.mongooseInstance = Mongoose.connect(this.DB_CONNECTION_STRING);
     return this.mongooseInstance;
   }
 
