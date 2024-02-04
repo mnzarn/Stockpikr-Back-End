@@ -1,6 +1,6 @@
 import * as chai from "chai";
-// import { MongoMemoryServer } from "mongodb-memory-server";
-// import mongoose from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import supertest from "supertest";
@@ -13,25 +13,26 @@ import { ParamTest } from "./api-test-param-type";
 chai.use(sinonChai);
 const expect = chai.expect;
 const sandbox = sinon.createSandbox();
-// let mongoServer: MongoMemoryServer;
-// let mongoInstance;
+let mongoServer: MongoMemoryServer;
+let mongoInstance;
 
-// before(async () => {
-//   mongoServer = await MongoMemoryServer.create();
-//   const mongoUri = mongoServer.getUri();
-//   console.log("mongo uri: ", mongoUri);
-//   mongoInstance = await mongoose.connect(mongoUri);
-//   console.log("mongo instance: ", mongoInstance);
-// });
+before(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+  console.log("mongo uri: ", mongoUri);
+  mongoInstance = await mongoose.connect(mongoUri);
+  console.log("mongo instance: ", mongoInstance);
+});
 
-// after(async () => {
-//   await mongoose.disconnect();
-//   await mongoServer.stop();
-// });
+after(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
+});
 
 describe("test-watchlist-apis", () => {
   let server: App;
-  let watchlistModel: WatchlistModel = new WatchlistModel(undefined);
+  let connection = mongoose.connection;
+  let watchlistModel: WatchlistModel = new WatchlistModel(connection);
   server = initServer({ watchlistModel });
   before(async () => {});
   beforeEach(() => {
@@ -103,7 +104,15 @@ describe("test-watchlist-apis", () => {
   });
 
   it("test-getWatchlists-in-memory-mongo", async () => {
-    // const watchlists = await watchlistModel.getWatchlists();
-    // console.log("watchlists: ", watchlists);
+    const name = "wl name";
+    const userId = "foobar";
+    const tickers = [];
+    await watchlistModel.addWatchlist(userId, name, tickers);
+    const watchlists = await watchlistModel.getWatchlists();
+    console.log("watchlists: ", watchlists);
+    expect(watchlists.length).eq(1);
+    expect(watchlists[0].watchlistName).eq(name);
+    expect(watchlists[0].userID).eq(userId);
+    expect(watchlists[0].tickers).deep.eq(tickers);
   });
 });
