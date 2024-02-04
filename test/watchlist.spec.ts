@@ -5,6 +5,7 @@ import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import supertest from "supertest";
 import { App } from "supertest/types";
+import { DataAccess } from "../DataAccess";
 import { WatchlistModel } from "../models/WatchlistModel";
 import { initServer } from "../server";
 import { ParamTest } from "./api-test-param-type";
@@ -18,11 +19,11 @@ let mongoServer: MongoMemoryServer;
 before(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
-  await mongoose.connect(mongoUri);
+  DataAccess.connect(mongoUri);
 });
 
 after(async () => {
-  await mongoose.disconnect();
+  await DataAccess.disconnect();
   await mongoServer.stop();
 });
 
