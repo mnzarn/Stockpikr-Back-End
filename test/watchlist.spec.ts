@@ -19,9 +19,7 @@ let mongoInstance;
 before(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
-  console.log("mongo uri: ", mongoUri);
   mongoInstance = await mongoose.connect(mongoUri);
-  console.log("mongo instance: ", mongoInstance);
 });
 
 after(async () => {
