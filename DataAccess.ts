@@ -12,7 +12,10 @@ class DataAccess {
 
   static connect(dbConnectionString?: string): Mongoose.Connection {
     if (this.mongooseInstance) return this.mongooseInstance;
+    return this.create(dbConnectionString);
+  }
 
+  static create(dbConnectionString?: string): Mongoose.Connection {
     this.mongooseConnection = Mongoose.connection;
     this.mongooseConnection.on("open", () => {
       console.log("Connected to mongodb.");

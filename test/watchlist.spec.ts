@@ -5,7 +5,6 @@ import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import supertest from "supertest";
 import { App } from "supertest/types";
-import { DataAccess } from "../DataAccess";
 import { WatchlistModel } from "../models/WatchlistModel";
 import { initServer } from "../server";
 import { ParamTest } from "./api-test-param-type";
@@ -16,26 +15,25 @@ const expect = chai.expect;
 const sandbox = sinon.createSandbox();
 let mongoServer: MongoMemoryServer;
 
-before(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
-  DataAccess.connect(mongoUri);
-});
-
-after(async () => {
-  await DataAccess.disconnect();
-  await mongoServer.stop();
-});
-
 describe("test-watchlist-apis", () => {
   let server: App;
-  let connection = mongoose.connection;
-  let watchlistModel: WatchlistModel = new WatchlistModel(connection);
-  server = initServer({ watchlistModel });
-  before(async () => {});
+  let watchlistModel: WatchlistModel;
+
   beforeEach(() => {
-    // forcefully restore sandbox to allow re-write of findOneStub
     sandbox.restore();
+  });
+
+  before(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    await mongoose.connect(mongoUri);
+    watchlistModel = new WatchlistModel(mongoose.connection);
+    server = initServer({ watchlistModel });
+  });
+
+  after(async () => {
+    await mongoose.disconnect();
+    await mongoServer.stop();
   });
 
   const basicWatchlist = {

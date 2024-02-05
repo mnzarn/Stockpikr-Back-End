@@ -14,7 +14,7 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel) => {
         res.status(404).json({ error: "Watchlist not found" });
       }
     } catch (error) {
-      console.error("Error fetching watchlist data:", error);
+      // console.error("Error fetching watchlist data:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -30,7 +30,7 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel) => {
         res.status(404).json({ error: "Watchlists not found" });
       }
     } catch (error) {
-      console.error("Error fetching watchlist data:", error);
+      // console.error("Error fetching watchlist data:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -47,7 +47,7 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel) => {
         res.status(404).json({ error: "Watchlists not found" });
       }
     } catch (error) {
-      console.error("Error fetching watchlist data:", error);
+      // console.error("Error fetching watchlist data:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });

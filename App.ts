@@ -2,18 +2,22 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
 import session from "express-session";
-import { StockDataModel } from "models/StockData";
-import { WatchlistModel } from "models/WatchlistModel";
 import passport from "passport";
 import * as path from "path";
-import { Middleware } from "services/middleware";
 import { fileURLToPath } from "url";
 import GooglePassport from "./GooglePassport";
 import { config } from "./config";
+import { LatestStockInfoModel } from "./models/LatestStockInfoModel";
+import { PurchasedStockModel } from "./models/PurchasedStockModel";
+import { StockDataModel } from "./models/StockData";
 import { UserModel } from "./models/UserModel";
+import { WatchlistModel } from "./models/WatchlistModel";
+import latestStockInfoRouterHandler from "./routes/lateststockinfo";
+import purchasedStocksRouterHandler from "./routes/purchasedstocks";
 import stockDataRouterHandler from "./routes/stockPrice";
 import userRouterHandler from "./routes/users";
 import watchlistRouterHandler from "./routes/watchlists";
+import { Middleware } from "./services/middleware";
 // workaround when using ES module: https://iamwebwiz.medium.com/how-to-fix-dirname-is-not-defined-in-es-module-scope-34d94a86694d
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -22,6 +26,8 @@ export interface Models {
   userModel?: UserModel;
   stockDataModel?: StockDataModel;
   watchlistModel?: WatchlistModel;
+  purchasedStockModel?: PurchasedStockModel;
+  latestStockInfoModel?: LatestStockInfoModel;
 }
 
 class App {
@@ -31,19 +37,12 @@ class App {
 
   // depdendency injection for middleware & mongo models for easy testing
   private middlewareInstance: Middleware;
-  private userModel: UserModel;
-  private watchlistModel: WatchlistModel;
-  private stockDataModel: StockDataModel;
 
-  constructor(models: Models) {
+  constructor(private models: Models) {
     this.express = express();
     this.middleware();
     this.googlePassport = new GooglePassport();
     this.FMP_API_KEY = "&apikey=" + config.FMP_API_KEY;
-    const {userModel, stockDataModel, watchlistModel} = models;
-    this.userModel = userModel
-    this.stockDataModel = stockDataModel;
-    this.watchlistModel = watchlistModel;
   }
 
   withMiddleware(middleware: Middleware) {
@@ -63,9 +62,11 @@ class App {
   public routes(): void {
     const router = express.Router();
     // setup all custom routers
-    const userRouter = userRouterHandler(this.userModel);
-    const stockDataRouter = stockDataRouterHandler(this.stockDataModel);
-    const watchlistRouter = watchlistRouterHandler(this.watchlistModel);
+    const userRouter = userRouterHandler(this.models.userModel);
+    const stockDataRouter = stockDataRouterHandler(this.models.stockDataModel);
+    const watchlistRouter = watchlistRouterHandler(this.models.watchlistModel);
+    const purchasedStocksRouter = purchasedStocksRouterHandler(this.models.purchasedStockModel);
+    const latestStockInfoRouter = latestStockInfoRouterHandler(this.models.latestStockInfoModel);
 
     router.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", "*");
@@ -101,11 +102,11 @@ class App {
         console.log("Successful login");
 
         const googleProfile: any = JSON.parse(JSON.stringify(req.user));
-        let doesUserExist: any = await this.userModel.getUserByAuth(googleProfile.id);
+        let doesUserExist: any = await this.models.userModel.getUserByAuth(googleProfile.id);
 
         if (!doesUserExist) {
           console.log("User doesn't exist. Creating a new entry for this user in the DB");
-          let newUser: any = await this.userModel.addUser(
+          let newUser: any = await this.models.userModel.addUser(
             googleProfile.id,
             googleProfile.name.givenName,
             googleProfile.name.familyName,
@@ -159,6 +160,11 @@ class App {
     // });
 
     this.express.use("/api/stockdata", stockDataRouter);
+
+    this.express.use("/api/purchasedstocks", purchasedStocksRouter);
+
+    this.express.use("/api/lateststockinfo", latestStockInfoRouter);
+
     this.express.use("/", router);
     this.express.use("/images", express.static(path.join(__dirname, "img")));
     this.express.use("/", express.static(path.join(__dirname, "pages")));

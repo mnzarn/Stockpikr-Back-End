@@ -1,8 +1,10 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
-import { IStockQuote } from "interfaces/IStockQuote";
 import { config } from "../config";
 import { ICompanyProfile } from "../interfaces/ICompanyProfile";
+import { ILatestStockInfoModel } from "../interfaces/ILatestStockInfoModel";
 import IStockData from "../interfaces/IStockData";
+import { IStockQuote } from "../interfaces/IStockQuote";
+import { getCurrentTimestampSeconds } from "../utils";
 
 export class StockApiService {
   //----------------------------------------------------------------//
@@ -10,7 +12,10 @@ export class StockApiService {
   //----------------------------------------------------------------//
 
   private static _apiKeyParam = `apikey=${config.FMP_API_KEY}`;
+  private static timeout = 10000; // 10 secs
   private static _apiService: AxiosInstance | null = null;
+  // TODO: how to get list of supported exchanges on FMP?
+  public static exchanges = ["NASDAQ", "NYSE", "TSE", "SSE", "HKEX", "LSE"];
   public static get apiService(): AxiosInstance {
     if (StockApiService._apiService == null) {
       StockApiService._apiService = axios.create({
@@ -41,11 +46,11 @@ export class StockApiService {
 
   private static async fetchData<T>(url: string): Promise<T | null> {
     try {
-      const response = await StockApiService.apiService.get<T>(url);
+      const response = await StockApiService.apiService.get<T>(url, { timeout: StockApiService.timeout });
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError && error.response != null) {
-        console.error("Error fetching company search results:", error.response.data);
+        console.error("Error fetching search results:", error.response.data);
       }
     }
     return null;
@@ -67,6 +72,25 @@ export class StockApiService {
     }
     return [];
   }
+
+  public static async fetchExchangeSymbols(_exchange?: string): Promise<ILatestStockInfoModel[]> {
+    const exchanges = _exchange ? [_exchange] : this.exchanges;
+    const response = // TODO: change to allSettled so that we have something to display
+      (
+        await Promise.all(
+          exchanges.map((exchange) => {
+            const url = `/v3/symbol/${exchange}`;
+            return StockApiService.fetchData<ILatestStockInfoModel[]>(url);
+          })
+        )
+      ).flat();
+    if (response) {
+      const now = getCurrentTimestampSeconds();
+      return response.map((res) => ({ ...res, storedTimestamp: now }));
+    }
+    return [];
+  }
+
   public static async fetchStockQuotes(input: string): Promise<IStockQuote[]> {
     if (input.trim().length === 0) {
       return [];
