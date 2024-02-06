@@ -13,7 +13,6 @@ class GooglePassport {
             callbackURL: config.GOOGLE_CALLBACK_URL
           },
           (accessToken, refreshToken, profile, done) => {
-            //console.log(profile);
             done(null, profile);
           }
         )

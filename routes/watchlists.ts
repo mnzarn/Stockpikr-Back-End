@@ -56,9 +56,16 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel) => {
   watchlistRouter.put("/:name", async (req, res, next) => {
     try {
       // TODO: validate wl id, user id, and body
-      const { name: watchlistName } = req.params;
-      const userID = req.query.userId as string;
-      const { tickers } = req.body;
+      const watchlistName = req.params.name;
+      const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
+
+      let original_tickers = await Watchlists.getWatchlistTickers(watchlistName, userID);
+      console.log(await Watchlists.getWatchlist(watchlistName));
+      const tickers = req.body.tickers.concat(original_tickers.tickers);
+      console.log("params: ", req.params);
+      console.log("original tickers: ", original_tickers.tickers);
+      console.log("new tickers: ", req.body.tickers);
+      console.log("combined tickers: ", tickers);
 
       const updatedWatchlist = await Watchlists.updateWatchlist(watchlistName, userID, { tickers });
 
@@ -72,7 +79,8 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel) => {
   //Add watchlist
   watchlistRouter.post("/", async (req, res, next) => {
     try {
-      const { userID, tickers, watchlistName } = req.body;
+      const { tickers, watchlistName } = req.body;
+      const userID = req.session["uuid"] ? req.session["uuid"] : req.body.userID;
       const watchlist = await Watchlists.getWatchlistByWatchlistNameAndUserId(userID, watchlistName);
       if (watchlist) {
         return res.status(403).json({ error: "Watchlist with the given name and id already exists. Cannot add new." });
@@ -91,8 +99,9 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel) => {
   watchlistRouter.delete("/:name", async (req, res, next) => {
     try {
       const { name: watchlistName } = req.params;
+      const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
 
-      const deletedWatchlist = await Watchlists.deleteWatchlist(watchlistName);
+      const deletedWatchlist = await Watchlists.deleteWatchlist(watchlistName, userID);
 
       res.status(200).json(deletedWatchlist);
     } catch (error) {

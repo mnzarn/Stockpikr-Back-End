@@ -21,7 +21,8 @@ class UserModel extends BaseModel {
         firstName: String,
         lastName: String,
         email: String,
-        phoneNumber: String
+        phoneNumber: String,
+        profilePic: String
       },
       {
         collection: "users"
@@ -44,7 +45,14 @@ class UserModel extends BaseModel {
     return UserModel.instance;
   }
 
-  public async addUser(authID: string, firstName: string, lastName: string, email: string, phoneNumber: string) {
+  public async addUser(
+    authID: string,
+    firstName: string,
+    lastName: string,
+    email: string,
+    phoneNumber: string,
+    profilePic: string
+  ) {
     const userID = uuidv4();
     console.log(userID);
 
@@ -54,15 +62,23 @@ class UserModel extends BaseModel {
       firstName: firstName,
       lastName: lastName,
       email: email,
-      phoneNumber: phoneNumber
+      phoneNumber: phoneNumber,
+      profilePic: profilePic
     });
 
     await newUser.save();
     return userID;
   }
 
-  public async updateUser(userID: string, firstName: string, lastName: string, email: string, phoneNumber: string) {
-    return this.model.findOneAndUpdate({ userID, firstName, lastName, email, phoneNumber }, { new: true });
+  public async updateUser(
+    userID: string,
+    firstName: string,
+    lastName: string,
+    email: string,
+    phoneNumber: string,
+    profilePic: string
+  ) {
+    return this.model.findOneAndUpdate({ userID, firstName, lastName, email, phoneNumber, profilePic }, { new: true });
   }
 
   public async getUserByID(userID: string) {

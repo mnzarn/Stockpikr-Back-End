@@ -61,6 +61,21 @@ const stockDataRouterHandler = (stockDataModel: StockDataModel) => {
     }
   });
 
+  stockDataRouter.get("/:symbol/profile", async (req, res, next) => {
+    try {
+      const { symbol } = req.params;
+      const companyProfile = await StockApiService.fetchCompanyProfile(symbol);
+      if (companyProfile.length > 0) {
+        res.json(companyProfile);
+      } else {
+        res.status(404).json({ error: "Stock profile not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching company profile data:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   //Update user information by ID
   stockDataRouter.put("/:symbol", async (req, res, next) => {
     try {

@@ -41,9 +41,9 @@ const userRouterHandler = (Users: UserModel) => {
     try {
       const id = req.session["uuid"] ? req.session["uuid"] : req.params.id;
       console.log("Here is the id: ", id);
-      const { firstName, lastName, email, phoneNumber } = req.body;
+      const { firstName, lastName, email, phoneNumber, profilePic } = req.body;
 
-      const updatedUser = await Users.updateUser(id, firstName, lastName, email, phoneNumber);
+      const updatedUser = await Users.updateUser(id, firstName, lastName, email, phoneNumber, profilePic);
 
       res.status(200).json(updatedUser);
     } catch (error) {

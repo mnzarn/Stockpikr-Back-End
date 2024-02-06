@@ -96,10 +96,11 @@ class App {
         next();
       },
       passport.authenticate("google", {
-        failureRedirect: "http://localhost:3000/signin"
+        failureRedirect: "/StockPikr_Frontend/#/signin"
       }),
       async (req, res) => {
         console.log("Successful login");
+        console.log("req info - ", req.user);
 
         const googleProfile: any = JSON.parse(JSON.stringify(req.user));
         let doesUserExist: any = await this.models.userModel.getUserByAuth(googleProfile.id);
@@ -111,7 +112,8 @@ class App {
             googleProfile.name.givenName,
             googleProfile.name.familyName,
             googleProfile.emails[0].value,
-            "123456789"
+            "123456789",
+            googleProfile.photos[0].value
           );
           console.log("New user created with ID: ", newUser);
           req.session["uuid"] = newUser;
@@ -124,9 +126,23 @@ class App {
 
         // TODO: Have to change this to a relative link, otherwise the session information is lost
         // Solution is to inject frontend build files into the backend and serve them
-        res.redirect("http://localhost:3000/dashboard");
+        res.redirect("/StockPikr_Frontend/#/dashboard");
       }
     );
+
+    // Check if user is logged in
+    router.get("/login/active", (req, res) => {
+      if (req.session["uuid"]) {
+        res.send(true);
+      } else {
+        res.send(false);
+      }
+    });
+
+    // Heartbeat route
+    router.get("/heartbeat", (req, res) => {
+      res.json({ status: "Alive - Dil Dhakad Raha Hai" });
+    });
 
     router.get("/logout", (req, res) => {
       req.session.destroy((err) => {
@@ -134,7 +150,7 @@ class App {
           console.log("Error destroying session:", err);
           return res.status(500).send("Internal Server Error");
         }
-        res.redirect("http://localhost:3000/signin");
+        res.redirect("/StockPikr_Frontend/#/signin");
       });
     });
 
@@ -166,8 +182,7 @@ class App {
     this.express.use("/api/lateststockinfo", latestStockInfoRouter);
 
     this.express.use("/", router);
-    this.express.use("/images", express.static(path.join(__dirname, "img")));
-    this.express.use("/", express.static(path.join(__dirname, "pages")));
+    this.express.use("/StockPikr_Frontend", express.static("public")); // Frontend served at localhost:8080/StockPikr_Frontend
   }
 }
 

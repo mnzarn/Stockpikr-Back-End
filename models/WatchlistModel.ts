@@ -16,7 +16,12 @@ class WatchlistModel extends BaseModel {
       {
         watchlistName: String,
         userID: String,
-        tickers: [String]
+        tickers: [
+          {
+            symbol: String,
+            alertPrice: Number
+          }
+        ]
       },
       {
         collection: "watchlists",
@@ -42,7 +47,7 @@ class WatchlistModel extends BaseModel {
 
   public async updateWatchlist(watchlistName: string, userID: string, watchlist: { tickers?: Ticker[] }) {
     const { tickers } = watchlist;
-    return this.model.findOneAndUpdate({ watchlistName, userID }, { tickers }, { new: true });
+    return this.model.findOneAndUpdate({ watchlistName, userID }, { tickers }, { new: false });
   }
 
   public async getWatchlistsByUserID(userID: string) {
@@ -50,7 +55,11 @@ class WatchlistModel extends BaseModel {
   }
 
   public async getWatchlist(watchlistName: string) {
-    return this.model.find({ watchlistName });
+    return this.model.findOne({ watchlistName });
+  }
+
+  public async getWatchlistTickers(watchlistName: string, userID: string) {
+    return this.model.findOne({ watchlistName, userID })?.select("tickers");
   }
 
   public async getWatchlistByWatchlistNameAndUserId(userID: string, watchlistName: string) {
@@ -61,8 +70,8 @@ class WatchlistModel extends BaseModel {
     return this.model.find();
   }
 
-  public async deleteWatchlist(watchlistName: string): Promise<any> {
-    return this.model.deleteOne({ watchlistName });
+  public async deleteWatchlist(watchlistName: string, userID: string): Promise<any> {
+    return this.model.deleteOne({ watchlistName, userID });
   }
 }
 

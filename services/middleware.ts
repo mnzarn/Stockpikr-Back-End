@@ -7,7 +7,7 @@ export class Middleware {
       next();
     } else {
       console.log("The user is not authenticated for this action!");
-      res.redirect("http://localhost:3000/signin");
+      res.redirect("/StockPikr_Frontend/#/signin");
     }
   }
 }

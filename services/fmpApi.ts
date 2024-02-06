@@ -52,8 +52,8 @@ export class StockApiService {
       if (error instanceof AxiosError && error.response != null) {
         console.error("Error fetching search results:", error.response.data);
       }
+      return error.response?.data;
     }
-    return null;
   }
 
   //----------------------------------------------------------------//

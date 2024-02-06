@@ -7,6 +7,7 @@ interface IUserModel extends mongoose.Document {
   lastName: string;
   email: string;
   phoneNumber: string;
+  profilePic: string;
 }
 
 export { IUserModel };

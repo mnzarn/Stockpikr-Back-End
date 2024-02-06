@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/StockPikr_Frontend/static/css/main.3903bb69.css",
+    "main.js": "/StockPikr_Frontend/static/js/main.2bc2e332.js",
+    "static/js/27.7e6e119a.chunk.js": "/StockPikr_Frontend/static/js/27.7e6e119a.chunk.js",
+    "static/media/logo+title-light-mode.png": "/StockPikr_Frontend/static/media/logo+title-light-mode.a1473a3d4f405d3f27d5.png",
+    "index.html": "/StockPikr_Frontend/index.html"
+  },
+  "entrypoints": [
+    "static/css/main.3903bb69.css",
+    "static/js/main.2bc2e332.js"
+  ]
+}

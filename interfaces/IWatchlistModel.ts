@@ -9,7 +9,6 @@ interface IWatchlistModel extends mongoose.Document {
 interface Ticker {
   symbol: string; // should be unique
   alertPrice: number;
-  name?: string;
 }
 
 export { IWatchlistModel, Ticker };
