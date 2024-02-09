@@ -100,6 +100,31 @@ describe("test-watchlist-apis", () => {
     });
   });
 
+  it("test-deleteTickersInWatchlist", async () => {
+    // fixture
+    const name = "wl name";
+    const userId = "foobar";
+    const tickers: Ticker[] = [
+      { symbol: "foo", alertPrice: 1 },
+      { symbol: "bar", alertPrice: 2 }
+    ];
+    await watchlistModel.addWatchlist(userId, name, tickers);
+    const watchlist = await watchlistModel.getWatchlist(name);
+    console.log(watchlist);
+    expect(watchlist.tickers.length).to.eq(2);
+    expect(watchlist.tickers.map((t) => t.symbol)).to.deep.eq(["foo", "bar"]);
+
+    // test
+    await supertest.agent(server).patch(`/api/watchlists/tickers/${name}`).query({ userId }).send(["bar"]).expect(200);
+    // assert
+    const newWatchlist = await watchlistModel.getWatchlist(name);
+    expect(newWatchlist.tickers.length).to.equal(1);
+    expect(newWatchlist.tickers[0].symbol).to.equal("foo");
+
+    // clean up. delete old watchlists for other tests
+    await watchlistModel.deleteWatchlist(name, userId);
+  });
+
   it("test-getWatchlists-in-memory-mongo", async () => {
     const name = "wl name";
     const userId = "foobar";
@@ -111,26 +136,7 @@ describe("test-watchlist-apis", () => {
     expect(watchlists[0].watchlistName).eq(name);
     expect(watchlists[0].userID).eq(userId);
     expect(watchlists[0].tickers).deep.eq(tickers);
-  });
-
-  it("test-deleteTickersInWatchlist", async () => {
-    // fixture
-    const name = "wl name";
-    const userId = "foobar";
-    const tickers: Ticker[] = [
-      { symbol: "foo", alertPrice: 1 },
-      { symbol: "bar", alertPrice: 2 }
-    ];
-    await watchlistModel.addWatchlist(userId, name, tickers);
-    const watchlist = await watchlistModel.getWatchlist(name);
-    expect(watchlist.tickers.length).to.eq(2);
-    expect(watchlist.tickers.map((t) => t.symbol)).to.deep.eq(["foo", "bar"]);
-
-    // test
-    await supertest.agent(server).patch(`/api/watchlists/tickers/${name}`).query({ userId }).send(["bar"]).expect(200);
-    // assert
-    const newWatchlist = await watchlistModel.getWatchlist(name);
-    expect(newWatchlist.tickers.length).to.equal(1);
-    expect(newWatchlist.tickers[0].symbol).to.equal("foo");
+    // clean up
+    await watchlistModel.deleteWatchlist(name, userId);
   });
 });
