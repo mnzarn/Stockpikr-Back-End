@@ -5,6 +5,7 @@ import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import supertest from "supertest";
 import { App } from "supertest/types";
+import { Ticker } from "../interfaces/IWatchlistModel";
 import { WatchlistModel } from "../models/WatchlistModel";
 import { initServer } from "../server";
 import { ParamTest } from "./api-test-param-type";
@@ -110,5 +111,26 @@ describe("test-watchlist-apis", () => {
     expect(watchlists[0].watchlistName).eq(name);
     expect(watchlists[0].userID).eq(userId);
     expect(watchlists[0].tickers).deep.eq(tickers);
+  });
+
+  it("test-deleteTickersInWatchlist", async () => {
+    // fixture
+    const name = "wl name";
+    const userId = "foobar";
+    const tickers: Ticker[] = [
+      { symbol: "foo", alertPrice: 1 },
+      { symbol: "bar", alertPrice: 2 }
+    ];
+    await watchlistModel.addWatchlist(userId, name, tickers);
+    const watchlist = await watchlistModel.getWatchlist(name);
+    expect(watchlist.tickers.length).to.eq(2);
+    expect(watchlist.tickers.map((t) => t.symbol)).to.deep.eq(["foo", "bar"]);
+
+    // test
+    await supertest.agent(server).patch(`/api/watchlists/tickers/${name}`).query({ userId }).send(["bar"]).expect(200);
+    // assert
+    const newWatchlist = await watchlistModel.getWatchlist(name);
+    expect(newWatchlist.tickers.length).to.equal(1);
+    expect(newWatchlist.tickers[0].symbol).to.equal("foo");
   });
 });

@@ -59,12 +59,27 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel) => {
       const watchlistName = req.params.name;
       const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
 
-      let original_tickers = await Watchlists.getWatchlistTickers(watchlistName, userID);
-      const tickers = req.body.concat(original_tickers.tickers);
+      let originalTickers = await Watchlists.getWatchlistTickers(watchlistName, userID);
+      const tickers = req.body.concat(originalTickers.tickers);
 
       const updatedWatchlist = await Watchlists.updateWatchlist(watchlistName, userID, { tickers });
 
       res.status(200).json(updatedWatchlist);
+    } catch (error) {
+      console.error("Error updating watchlist:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  //Delete tickers of a watchlist
+  watchlistRouter.patch("/tickers/:name", async (req, res, next) => {
+    try {
+      // TODO: validate wl id, user id, and body
+      const watchlistName = req.params.name;
+      const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
+      console.log("user id: ", userID)
+      const result = await Watchlists.deleteTickersInWatchlist(watchlistName, userID, req.body);
+      res.status(200).json(result);
     } catch (error) {
       console.error("Error updating watchlist:", error);
       res.status(500).json({ error: "Internal server error" });

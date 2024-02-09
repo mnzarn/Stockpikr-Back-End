@@ -18,6 +18,7 @@ class WatchlistModel extends BaseModel {
         userID: String,
         tickers: [
           {
+            _id: false,
             symbol: String,
             alertPrice: Number
           }
@@ -48,6 +49,10 @@ class WatchlistModel extends BaseModel {
   public async updateWatchlist(watchlistName: string, userID: string, watchlist: { tickers?: Ticker[] }) {
     const { tickers } = watchlist;
     return this.model.findOneAndUpdate({ watchlistName, userID }, { tickers }, { new: false });
+  }
+
+  public async deleteTickersInWatchlist(watchlistName: string, userID: string, tickerSymbols: string[]) {
+    return this.model.updateMany({ watchlistName, userID }, { $pull: { tickers: { symbol: { $in: tickerSymbols } } } });
   }
 
   public async getWatchlistsByUserID(userID: string) {
