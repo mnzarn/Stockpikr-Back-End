@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/StockPikr_Frontend/static/css/main.ea49cd88.css",
-    "main.js": "/StockPikr_Frontend/static/js/main.96e5a8a1.js",
+    "main.js": "/StockPikr_Frontend/static/js/main.be506f91.js",
     "static/js/27.7e6e119a.chunk.js": "/StockPikr_Frontend/static/js/27.7e6e119a.chunk.js",
     "static/media/image-landing-page.jpg": "/StockPikr_Frontend/static/media/image-landing-page.a1ea594a0db8c905910e.jpg",
     "static/media/logo+title-light-mode.png": "/StockPikr_Frontend/static/media/logo+title-light-mode.a1473a3d4f405d3f27d5.png",
@@ -9,6 +9,6 @@
   },
   "entrypoints": [
     "static/css/main.ea49cd88.css",
-    "static/js/main.96e5a8a1.js"
+    "static/js/main.be506f91.js"
   ]
 }
