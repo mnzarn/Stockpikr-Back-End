@@ -60,12 +60,7 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel) => {
       const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
 
       let original_tickers = await Watchlists.getWatchlistTickers(watchlistName, userID);
-      console.log(await Watchlists.getWatchlist(watchlistName));
-      const tickers = req.body.tickers.concat(original_tickers.tickers);
-      console.log("params: ", req.params);
-      console.log("original tickers: ", original_tickers.tickers);
-      console.log("new tickers: ", req.body.tickers);
-      console.log("combined tickers: ", tickers);
+      const tickers = req.body.concat(original_tickers.tickers);
 
       const updatedWatchlist = await Watchlists.updateWatchlist(watchlistName, userID, { tickers });
 
