@@ -51,6 +51,26 @@ const latestStockInfoRouterHandler = (LatestStocks: LatestStockInfoModel) => {
     }
   });
 
+  latestStockInfoRouter.get("/search/:input", async (req, res, next) => {
+    try {
+      const { limit, offset } = req.query;
+      const { input } = req.params;
+      const latestStockInfos = await LatestStocks.searchStockQuotes(
+        input,
+        parseInt(limit as string),
+        parseInt(offset as string)
+      );
+      if (latestStockInfos) {
+        res.json(latestStockInfos);
+      } else {
+        res.status(404).json({ error: "Latest Stock Infos not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching latest stock info:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   latestStockInfoRouter.get("/quotes/:symbols", async (req, res, next) => {
     try {
       const symbols = req.params.symbols;

@@ -7,6 +7,7 @@ import supertest from "supertest";
 import { App } from "supertest/types";
 import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
 import { initServer } from "../server";
+import { getCurrentTimestampSeconds } from "../utils";
 
 chai.use(sinonChai);
 const expect = chai.expect;
@@ -72,6 +73,56 @@ describe("test-lateststockinfo-apis-post", () => {
     expect(res.body).to.be.an("array");
     expect(res.body.length).eq(1);
     expect(res.body[0].symbol).eq(ticker);
+    // clean up data after testing
+    await latestStocks.deleteStockPriceInfoByTicker(ticker);
+  });
+
+  it("should search correct tickers", async () => {
+    // fixture
+    const tickers = ["FAKE_TICKER", "FAKE_TICKER_2", "foo bar"];
+    const now = getCurrentTimestampSeconds();
+    const stockInfos = tickers.map((ticker) => ({
+      symbol: ticker,
+      name: "FAKE_TICKER Inc.",
+      price: 145.775,
+      changesPercentage: 0.32,
+      change: 0.465,
+      dayLow: 143.9,
+      dayHigh: 146.71,
+      yearHigh: 179.61,
+      yearLow: 124.17,
+      marketCap: 2306437439846,
+      priceAvg50: 140.8724,
+      priceAvg200: 147.18594,
+      exchange: "NASDAQ",
+      volume: 42478176,
+      avgVolume: 73638864,
+      open: 144.38,
+      previousClose: 145.31,
+      eps: 5.89,
+      pe: 24.75,
+      earningsAnnouncement: new Date("2023-04-26T10:59:00.000+0000"),
+      sharesOutstanding: 15821899776,
+      storedTimestamp: now,
+      timestamp: 1677790773
+    }));
+    await latestStocks.addBulkTickers(stockInfos);
+
+    // testing. we search stock info based on input. We're using regex -> FAKE_TICKER should include both FAKE_TICKER & FAKE_TICKER_2
+    let result = await latestStocks.searchStockQuotes("FAKE_TICKER");
+    expect(result.length).to.eq(2);
+    expect(result[0].symbol).to.eq(tickers[0]);
+    expect(result[1].symbol).to.eq(tickers[1]);
+    
+    // by specifying exactly FAKE_TICKER_2, we get only FAKE_TICKER_2
+    result = await latestStocks.searchStockQuotes("FAKE_TICKER_2");
+    expect(result.length).to.eq(1);
+    expect(result[0].symbol).to.eq(tickers[1]);
+
+    // by specifying foo bar, we will only get foo bar
+    result = await latestStocks.searchStockQuotes("foo bar");
+    expect(result.length).to.eq(1);
+    expect(result[0].symbol).to.eq(tickers[2]);
   });
 });
 
