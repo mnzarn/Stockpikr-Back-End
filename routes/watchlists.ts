@@ -1,7 +1,9 @@
 import { Router } from "express";
+import { Ticker } from "../interfaces/IWatchlistModel";
+import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
 import { WatchlistModel } from "../models/WatchlistModel";
 
-const watchlistRouterHandler = (Watchlists: WatchlistModel) => {
+const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: LatestStockInfoModel) => {
   const watchlistRouter = Router();
 
   watchlistRouter.get("/:name", async (req, res, next) => {
@@ -58,11 +60,25 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel) => {
       // TODO: validate wl id, user id, and body
       const watchlistName = req.params.name;
       const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
-
       let originalTickers = await Watchlists.getWatchlistTickers(watchlistName, userID);
-      const tickers = req.body.concat(originalTickers.tickers);
+      let newTickers: Ticker[] = originalTickers.tickers;
 
-      const updatedWatchlist = await Watchlists.updateWatchlist(watchlistName, userID, { tickers });
+      for (let ticker of req.body as Ticker[]) {
+        let stockQuote = await latestStockInfo.getLatestStockQuoteDetailed(ticker.symbol);
+        if (!stockQuote) {
+          res
+            .status(404)
+            .json({ error: `Cannot find the provided stock symbol ${ticker.symbol} to add to the watchlist` });
+          return;
+        }
+        const tickerIndex = newTickers.findIndex((t) => t.symbol === ticker.symbol);
+        // if the submitted ticker is new (not included in the watchlist -> we push it to the tickers list)
+        if (tickerIndex === -1) newTickers.push(ticker);
+        // otherwise we update the alert price of the existing ticker
+        else newTickers[tickerIndex].alertPrice = ticker.alertPrice;
+      }
+
+      const updatedWatchlist = await Watchlists.updateWatchlist(watchlistName, userID, newTickers);
 
       res.status(200).json(updatedWatchlist);
     } catch (error) {
@@ -77,7 +93,6 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel) => {
       // TODO: validate wl id, user id, and body
       const watchlistName = req.params.name;
       const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
-      console.log("user id: ", userID)
       const result = await Watchlists.deleteTickersInWatchlist(watchlistName, userID, req.body);
       res.status(200).json(result);
     } catch (error) {

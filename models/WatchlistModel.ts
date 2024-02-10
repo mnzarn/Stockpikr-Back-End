@@ -46,8 +46,7 @@ class WatchlistModel extends BaseModel {
     return watchlistName;
   }
 
-  public async updateWatchlist(watchlistName: string, userID: string, watchlist: { tickers?: Ticker[] }) {
-    const { tickers } = watchlist;
+  public async updateWatchlist(watchlistName: string, userID: string, tickers?: Ticker[]) {
     return this.model.findOneAndUpdate({ watchlistName, userID }, { tickers }, { new: false });
   }
 

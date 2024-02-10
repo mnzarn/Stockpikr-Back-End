@@ -64,7 +64,7 @@ class App {
     // setup all custom routers
     const userRouter = userRouterHandler(this.models.userModel);
     const stockDataRouter = stockDataRouterHandler(this.models.stockDataModel);
-    const watchlistRouter = watchlistRouterHandler(this.models.watchlistModel);
+    const watchlistRouter = watchlistRouterHandler(this.models.watchlistModel, this.models.latestStockInfoModel);
     const purchasedStocksRouter = purchasedStocksRouterHandler(this.models.purchasedStockModel);
     const latestStockInfoRouter = latestStockInfoRouterHandler(this.models.latestStockInfoModel);
 
