@@ -54,7 +54,7 @@ class App {
     this.express.use(cors());
     this.express.use(bodyParser.json());
     this.express.use(bodyParser.urlencoded({ extended: false }));
-    this.express.use(session({ secret: "toxic flamingo" }));
+    this.express.use(session({ secret: "toxic flamingo", saveUninitialized: true, resave: true }));
     this.express.use(passport.initialize());
     this.express.use(passport.session());
   }
