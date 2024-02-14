@@ -1,7 +1,18 @@
 import { Router } from "express";
-import { Ticker } from "../interfaces/IWatchlistModel";
+import { MinimalWatchlistTicker } from "../interfaces/IWatchlistModel";
 import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
 import { WatchlistModel } from "../models/WatchlistModel";
+
+const transformMinimalToDetailedTickers = async (
+  latestStockInfo: LatestStockInfoModel,
+  tickers: MinimalWatchlistTicker[]
+) => {
+  const detailedTickers = await latestStockInfo.getLatestStockQuotes(tickers.map((t) => t.symbol));
+  return tickers.map((t, index) => ({
+    ...t,
+    ...detailedTickers[index]
+  }));
+};
 
 const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: LatestStockInfoModel) => {
   const watchlistRouter = Router();
@@ -9,9 +20,10 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
   watchlistRouter.get("/:name", async (req, res, next) => {
     try {
       const { name } = req.params;
-      const watchlist = await Watchlists.getWatchlist(name);
+      let watchlist = await Watchlists.getWatchlist(name);
       if (watchlist) {
-        res.json(watchlist);
+        watchlist.tickers = await transformMinimalToDetailedTickers(latestStockInfo, watchlist.tickers);
+        res.status(200).json(watchlist);
       } else {
         res.status(404).json({ error: "Watchlist not found" });
       }
@@ -25,8 +37,11 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
   watchlistRouter.get("/", async (req, res, next) => {
     try {
       // TODO: add pagination to avoid ddos
-      const watchlists = await Watchlists.getWatchlists();
-      if (watchlists.length > 0) {
+      let watchlists = await Watchlists.getWatchlists();
+      if (watchlists && watchlists.length && watchlists.length > 0) {
+        for (let wl of watchlists) {
+          wl.tickers = await transformMinimalToDetailedTickers(latestStockInfo, wl.tickers);
+        }
         res.status(200).json(watchlists);
       } else {
         res.status(404).json({ error: "Watchlists not found" });
@@ -41,10 +56,12 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
   watchlistRouter.get("/user/:id", async (req, res, next) => {
     try {
       const id = req.session["uuid"] ? req.session["uuid"] : req.params.id;
-      console.log("Here is the id: ", id);
-      const watchlists = await Watchlists.getWatchlistsByUserID(id);
-      if (watchlists) {
-        res.json(watchlists);
+      let watchlists = await Watchlists.getWatchlistsByUserID(id);
+      if (watchlists && watchlists.length && watchlists.length > 0) {
+        for (let wl of watchlists) {
+          wl.tickers = await transformMinimalToDetailedTickers(latestStockInfo, wl.tickers);
+        }
+        res.status(200).json(watchlists);
       } else {
         res.status(404).json({ error: "Watchlists not found" });
       }
@@ -61,9 +78,9 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
       const watchlistName = req.params.name;
       const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
       let originalTickers = await Watchlists.getWatchlistTickers(watchlistName, userID);
-      let newTickers: Ticker[] = originalTickers.tickers;
+      let newTickers: MinimalWatchlistTicker[] = originalTickers.tickers;
 
-      for (let ticker of req.body as Ticker[]) {
+      for (let ticker of req.body as MinimalWatchlistTicker[]) {
         let stockQuote = await latestStockInfo.getLatestStockQuoteDetailed(ticker.symbol);
         if (!stockQuote) {
           res

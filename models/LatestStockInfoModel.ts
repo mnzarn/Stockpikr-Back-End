@@ -124,34 +124,35 @@ class LatestStockInfoModel extends BaseModel {
   }
 
   public async getLatestStockQuoteDetailed(symbol: string) {
-    return this.model.findOne({ symbol });
+    return this.model.findOne({ symbol }, {}, { lean: true });
   }
 
   public async getLatestStockQuotes(symbols: string[]) {
-    return this.model.find({ symbol: { $in: symbols } });
+    return this.model.find({ symbol: { $in: symbols } }, {}, { lean: true });
   }
 
   public async getLatestUpdate(symbol: string) {
     return this.model.findOne(
       { symbol: symbol },
-      { previousClose: 1, open: 1, changesPercentage: 1, change: 1, dayLow: 1, dayHigh: 1 }
+      { previousClose: 1, open: 1, changesPercentage: 1, change: 1, dayLow: 1, dayHigh: 1 },
+      { lean: true }
     );
   }
 
   public async getLatestStockQuotesByExchange(exchange: string) {
-    return this.model.find({ exchange: exchange });
+    return this.model.find({ exchange: exchange }, {}, { lean: true });
   }
 
   public async getAllLatestStockQuotes(_limit?: number, _offset?: number) {
     const limit = _limit > 20 ? 20 : _limit;
     const offset = _offset ? +_offset : 0;
-    return this.model.find({}, {}, { limit }).skip(limit * offset);
+    return this.model.find({}, {}, { limit, lean: true }).skip(limit * offset);
   }
 
   public async searchStockQuotes(input: string, _limit?: number, _offset?: number) {
     const limit = _limit > 20 ? 20 : _limit;
     const offset = _offset ? +_offset : 0;
-    return this.model.find({ symbol: { $regex: input } }, {}, { limit }).skip(limit * offset);
+    return this.model.find({ symbol: { $regex: input } }, {}, { limit, lean: true }).skip(limit * offset);
   }
 
   public async deleteStockPriceInfoByTicker(symbol: string): Promise<any> {

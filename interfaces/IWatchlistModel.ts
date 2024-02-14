@@ -1,14 +1,15 @@
 import mongoose from "mongoose";
+import { IStockQuote } from "./IStockQuote";
 
-interface IWatchlistModel extends mongoose.Document {
+export interface IWatchlistModel extends mongoose.Document {
   watchlistName: string; // for simplicity, we can use watchlist name as a unique identifier
   userID: string;
-  tickers: Ticker[];
+  tickers: MinimalWatchlistTicker[];
 }
 
-interface Ticker {
+export type MinimalWatchlistTicker = {
   symbol: string; // should be unique
   alertPrice: number;
-}
+};
 
-export { IWatchlistModel, Ticker };
+export type WatchlistTicker = MinimalWatchlistTicker & IStockQuote;

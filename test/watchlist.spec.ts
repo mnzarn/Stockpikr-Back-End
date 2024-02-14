@@ -5,7 +5,7 @@ import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import supertest from "supertest";
 import { App } from "supertest/types";
-import { Ticker } from "../interfaces/IWatchlistModel";
+import { MinimalWatchlistTicker } from "../interfaces/IWatchlistModel";
 import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
 import { WatchlistModel } from "../models/WatchlistModel";
 import { initServer } from "../server";
@@ -40,11 +40,43 @@ describe("test-watchlist-apis", () => {
     await mongoServer.stop();
   });
 
+  const stockSymbol = "FAKE_TICKER";
   const basicWatchlist = {
     watchlistName: "My Watchlist",
     userID: "x",
-    tickers: []
+    tickers: [] as MinimalWatchlistTicker[]
+  };
+  const advancedWatchlist = {
+    watchlistName: "My Watchlist",
+    userID: "x",
+    tickers: [{ symbol: stockSymbol, alertPrice: 2 }] as MinimalWatchlistTicker[]
   } as any;
+  const stockInfo = {
+    symbol: "FAKE_TICKER",
+    name: "FAKE_TICKER Inc.",
+    price: 145.775,
+    changesPercentage: 0.32,
+    change: 0.465,
+    dayLow: 143.9,
+    dayHigh: 146.71,
+    yearHigh: 179.61,
+    yearLow: 124.17,
+    marketCap: 2306437439846,
+    priceAvg50: 140.8724,
+    priceAvg200: 147.18594,
+    exchange: "NASDAQ",
+    volume: 42478176,
+    avgVolume: 73638864,
+    open: 144.38,
+    previousClose: 145.31,
+    eps: 5.89,
+    pe: 24.75,
+    earningsAnnouncement: new Date("2023-04-26T10:59:00.000+0000"),
+    sharesOutstanding: 15821899776,
+    storedTimestamp: 1677790773,
+    timestamp: 1677790773
+  };
+
   const getWatchlistsTcs: ParamTest[] = [
     [[basicWatchlist], 200, [basicWatchlist], false],
     [[], 404, { error: "Watchlists not found" }, false],
@@ -103,11 +135,91 @@ describe("test-watchlist-apis", () => {
     });
   });
 
+  it(`test /api/watchlists with tickers should return watchlists with detailed tickers`, async () => {
+    // fixture, mock getWatchlists db call so we can evaluate the apis
+    await watchlistModel.addWatchlist(
+      advancedWatchlist.userID,
+      advancedWatchlist.watchlistName,
+      advancedWatchlist.tickers
+    );
+    await latestStockInfoModel.addNewTickerInfo(stockInfo);
+
+    // action
+    const result = await supertest.agent(server).get("/api/watchlists").send();
+    // assert
+    expect(result.status).to.eq(200);
+    const watchlists = result.body;
+    expect(watchlists.length).to.eq(1);
+    expect(watchlists[0].watchlistName).to.eq(advancedWatchlist.watchlistName);
+    expect(watchlists[0].userID).to.eq(advancedWatchlist.userID);
+    const tickers = watchlists[0].tickers;
+    expect(tickers.length).to.eq(1);
+    expect(tickers[0].price).to.eq(stockInfo.price);
+    expect(tickers[0].changesPercentage).to.eq(stockInfo.changesPercentage);
+
+    // clean up
+    await watchlistModel.deleteWatchlist(advancedWatchlist.watchlistName, advancedWatchlist.userID);
+    await latestStockInfoModel.deleteStockPriceInfoByTicker(stockInfo.symbol);
+  });
+
+  it(`test /api/watchlists/user/:id with tickers should return watchlists with detailed tickers`, async () => {
+    // fixture, mock getWatchlists db call so we can evaluate the apis
+    await watchlistModel.addWatchlist(
+      advancedWatchlist.userID,
+      advancedWatchlist.watchlistName,
+      advancedWatchlist.tickers
+    );
+    await latestStockInfoModel.addNewTickerInfo(stockInfo);
+
+    // action
+    const result = await supertest.agent(server).get(`/api/watchlists/user/${advancedWatchlist.userID}`).send();
+    // assert
+    expect(result.status).to.eq(200);
+    const watchlists = result.body;
+    expect(watchlists.length).to.eq(1);
+    expect(watchlists[0].watchlistName).to.eq(advancedWatchlist.watchlistName);
+    expect(watchlists[0].userID).to.eq(advancedWatchlist.userID);
+    const tickers = watchlists[0].tickers;
+    expect(tickers.length).to.eq(1);
+    expect(tickers[0].price).to.eq(stockInfo.price);
+    expect(tickers[0].changesPercentage).to.eq(stockInfo.changesPercentage);
+
+    // clean up
+    await watchlistModel.deleteWatchlist(advancedWatchlist.watchlistName, advancedWatchlist.userID);
+    await latestStockInfoModel.deleteStockPriceInfoByTicker(stockInfo.symbol);
+  });
+
+  it(`test /api/watchlists/:name with tickers should return watchlist with detailed tickers`, async () => {
+    // fixture, mock getWatchlists db call so we can evaluate the apis
+    await watchlistModel.addWatchlist(
+      advancedWatchlist.userID,
+      advancedWatchlist.watchlistName,
+      advancedWatchlist.tickers
+    );
+    await latestStockInfoModel.addNewTickerInfo(stockInfo);
+
+    // action
+    const result = await supertest.agent(server).get(`/api/watchlists/${advancedWatchlist.watchlistName}`).send();
+    // assert
+    expect(result.status).to.eq(200);
+    const watchlist = result.body;
+    expect(watchlist.watchlistName).to.eq(advancedWatchlist.watchlistName);
+    expect(watchlist.userID).to.eq(advancedWatchlist.userID);
+    const tickers = watchlist.tickers;
+    expect(tickers.length).to.eq(1);
+    expect(tickers[0].price).to.eq(stockInfo.price);
+    expect(tickers[0].changesPercentage).to.eq(stockInfo.changesPercentage);
+
+    // clean up
+    await watchlistModel.deleteWatchlist(advancedWatchlist.watchlistName, advancedWatchlist.userID);
+    await latestStockInfoModel.deleteStockPriceInfoByTicker(stockInfo.symbol);
+  });
+
   it("test-deleteTickersInWatchlist", async () => {
     // fixture
     const name = "wl name";
     const userId = "foobar";
-    const tickers: Ticker[] = [
+    const tickers: MinimalWatchlistTicker[] = [
       { symbol: "foo", alertPrice: 1 },
       { symbol: "bar", alertPrice: 2 }
     ];
@@ -133,7 +245,7 @@ describe("test-watchlist-apis", () => {
     const name = "wl name";
     const userId = "foobar";
     const newTickerSymbol = "john";
-    const tickers: Ticker[] = [
+    const tickers: MinimalWatchlistTicker[] = [
       { symbol: "foo", alertPrice: 1 },
       { symbol: "bar", alertPrice: 2 }
     ];
@@ -149,7 +261,7 @@ describe("test-watchlist-apis", () => {
       .agent(server)
       .put(`/api/watchlists/${name}`)
       .query({ userId })
-      .send([{ symbol: newTickerSymbol, alertPrice: 1 }] as Ticker[])
+      .send([{ symbol: newTickerSymbol, alertPrice: 1 }] as MinimalWatchlistTicker[])
       .expect(404);
 
     // case 2: we will mock the lateststockinfo data to return something, so we can test updating tickers
@@ -162,7 +274,7 @@ describe("test-watchlist-apis", () => {
       .send([
         { symbol: newTickerSymbol, alertPrice: 10 }, // one new ticker
         { symbol: "bar", alertPrice: 3 } // existing ticker with different alert price, should update
-      ] as Ticker[])
+      ] as MinimalWatchlistTicker[])
       .expect(200);
 
     const { tickers: newTickers } = await watchlistModel.getWatchlistTickers(name, userId);

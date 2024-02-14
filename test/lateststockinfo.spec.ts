@@ -36,7 +36,7 @@ const stockInfo = {
   previousClose: 145.31,
   eps: 5.89,
   pe: 24.75,
-  earningsAnnouncement: "2023-04-26T10:59:00.000+0000",
+  earningsAnnouncement: new Date("2023-04-26T10:59:00.000+0000"),
   sharesOutstanding: 15821899776,
   timestamp: 1677790773
 };
