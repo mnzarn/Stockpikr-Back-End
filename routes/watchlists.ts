@@ -1,16 +1,39 @@
 import { Router } from "express";
-import { MinimalWatchlistTicker } from "../interfaces/IWatchlistModel";
+import { MinimalWatchlistTicker, WatchlistTicker } from "../interfaces/IWatchlistModel";
 import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
 import { WatchlistModel } from "../models/WatchlistModel";
+
+const calcPriceDifference = (firstPrice: number, secondPrice: number): number => {
+  if (secondPrice === 0) return 0;
+  return firstPrice / secondPrice - 1;
+};
+
+const displayPriceDiffPercentage = (priceDiff: number): number => {
+  return Number((priceDiff * 100).toFixed(4).replace(/\.?0+$/, ""));
+};
+
+export const calPriceDifferentPercentage = (firstPrice: number, secondPrice: number): number => {
+  const priceDiff = calcPriceDifference(firstPrice, secondPrice);
+  return displayPriceDiffPercentage(priceDiff);
+};
 
 const transformMinimalToDetailedTickers = async (
   latestStockInfo: LatestStockInfoModel,
   tickers: MinimalWatchlistTicker[]
-) => {
+): Promise<WatchlistTicker[]> => {
   const detailedTickers = await latestStockInfo.getLatestStockQuotes(tickers.map((t) => t.symbol));
-  return tickers.map((t, index) => ({
+  const updatedTickers = tickers.map((t, index) => ({
     ...t,
     ...detailedTickers[index]
+  }));
+  return updatedTickers.map((t) => ({
+    ...t,
+    currentVsAlertPricePercentage: calPriceDifferentPercentage(t.price, t.alertPrice),
+    nearHighVsCurrentPercentage: calPriceDifferentPercentage(t.dayHigh, t.price),
+    yearHighVsCurrentPercentage: calPriceDifferentPercentage(t.yearHigh, t.price),
+    nearLowVsCurrentPercentage: calPriceDifferentPercentage(t.dayLow, t.price),
+    yearLowVsCurrentPercentage: calPriceDifferentPercentage(t.yearLow, t.price),
+    earningsAnnouncement: t.earningsAnnouncement as any
   }));
 };
 
@@ -28,7 +51,7 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
         res.status(404).json({ error: "Watchlist not found" });
       }
     } catch (error) {
-      // console.error("Error fetching watchlist data:", error);
+      console.error("Error fetching watchlist data:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -47,7 +70,7 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
         res.status(404).json({ error: "Watchlists not found" });
       }
     } catch (error) {
-      // console.error("Error fetching watchlist data:", error);
+      console.error("Error fetching watchlist data:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -66,7 +89,7 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
         res.status(404).json({ error: "Watchlists not found" });
       }
     } catch (error) {
-      // console.error("Error fetching watchlist data:", error);
+      console.error("Error fetching watchlist data:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });

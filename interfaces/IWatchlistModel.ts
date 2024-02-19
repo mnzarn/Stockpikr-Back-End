@@ -12,4 +12,12 @@ export type MinimalWatchlistTicker = {
   alertPrice: number;
 };
 
-export type WatchlistTicker = MinimalWatchlistTicker & IStockQuote;
+export type CustomTickerData = {
+  currentVsAlertPricePercentage: number;
+  nearHighVsCurrentPercentage: number;
+  yearHighVsCurrentPercentage: number;
+  nearLowVsCurrentPercentage: number;
+  yearLowVsCurrentPercentage: number;
+};
+
+export type WatchlistTicker = MinimalWatchlistTicker & IStockQuote & CustomTickerData;
