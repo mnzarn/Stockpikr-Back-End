@@ -77,6 +77,9 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
       // TODO: validate wl id, user id, and body
       const watchlistName = req.params.name;
       const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
+      if (!watchlistName) return res.status(400).json({ error: "Watchlist name is empty" });
+      if (!userID) return res.status(400).json({ error: "User ID is empty" });
+
       let originalTickers = await Watchlists.getWatchlistTickers(watchlistName, userID);
       let newTickers: MinimalWatchlistTicker[] = originalTickers.tickers;
 
@@ -123,6 +126,8 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
     try {
       const { tickers, watchlistName } = req.body;
       const userID = req.session["uuid"] ? req.session["uuid"] : req.body.userID;
+      if (!watchlistName) return res.status(400).json({ error: "Watchlist name is empty" });
+      if (!userID) return res.status(400).json({ error: "User ID is empty" });
       const watchlist = await Watchlists.getWatchlistByWatchlistNameAndUserId(userID, watchlistName);
       if (watchlist) {
         return res.status(403).json({ error: "Watchlist with the given name and id already exists. Cannot add new." });
