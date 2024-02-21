@@ -183,6 +183,9 @@ class App {
 
     this.express.use("/", router);
     this.express.use("/StockPikr_Frontend", express.static("public")); // Frontend served at localhost:8080/StockPikr_Frontend
+
+    // Serve static files from the "dist" directory
+    this.express.use("/StockPikr_Frontend", express.static("dist"));
   }
 }
 

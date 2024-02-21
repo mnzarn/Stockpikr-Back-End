@@ -71,7 +71,50 @@ const stockDataRouterHandler = (stockDataModel: StockDataModel) => {
         res.status(404).json({ error: "Stock profile not found" });
       }
     } catch (error) {
-      console.error("Error fetching company profile data:", error);
+      console.error("Error fetching stock profile data:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  stockDataRouter.get("/gainers", async (req, res, next) => {
+    try {
+      const stockGainers = await StockApiService.fetchGainers();
+      console.log(stockGainers);
+      if (stockGainers.length > 0) {
+        res.json(stockGainers);
+      } else {
+        res.status(404).json({ error: "Stock gainers not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching stock data:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  stockDataRouter.get("/losers", async (req, res, next) => {
+    try {
+      const stockLosers = await StockApiService.fetchLosers();
+      console.log(stockLosers);
+      if (stockLosers.length > 0) {
+        res.json(stockLosers);
+      } else {
+        res.status(404).json({ error: "Stock losers not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching stock data:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  stockDataRouter.get("/actives", async (req, res, next) => {
+    try {
+      const stockActives = await StockApiService.fetchActives();
+      console.log(stockActives);
+      if (stockActives.length > 0) {
+        res.json(stockActives);
+      } else {
+        res.status(404).json({ error: "Stock actives not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching stock data:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });

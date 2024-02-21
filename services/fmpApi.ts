@@ -3,6 +3,7 @@ import { config } from "../config";
 import { ICompanyProfile } from "../interfaces/ICompanyProfile";
 import { ILatestStockInfoModel } from "../interfaces/ILatestStockInfoModel";
 import IStockData from "../interfaces/IStockData";
+import { IStockPriceChange } from "../interfaces/IStockPriceChanges";
 import { IStockQuote } from "../interfaces/IStockQuote";
 import { getCurrentTimestampSeconds } from "../utils";
 
@@ -50,7 +51,7 @@ export class StockApiService {
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError && error.response != null) {
-        console.error("Error fetching search results:", error.response.data);
+        console.error("Error fetching results:", error.response.data);
       }
       return error.response?.data;
     }
@@ -108,6 +109,30 @@ export class StockApiService {
     }
     const url = `/v3/profile/${input}`;
     const response = await StockApiService.fetchData<ICompanyProfile[]>(url);
+    if (response) {
+      return response;
+    }
+    return [];
+  }
+  public static async fetchGainers(): Promise<IStockPriceChange[]> {
+    const url = `/v3/stock_market/gainers`;
+    const response = await StockApiService.fetchData<IStockPriceChange[]>(url);
+    if (response) {
+      return response;
+    }
+    return [];
+  }
+  public static async fetchLosers(): Promise<IStockPriceChange[]> {
+    const url = `/v3/stock_market/losers`;
+    const response = await StockApiService.fetchData<IStockPriceChange[]>(url);
+    if (response) {
+      return response;
+    }
+    return [];
+  }
+  public static async fetchActives(): Promise<IStockPriceChange[]> {
+    const url = `/v3/stock_market/actives`;
+    const response = await StockApiService.fetchData<IStockPriceChange[]>(url);
     if (response) {
       return response;
     }
