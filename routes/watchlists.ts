@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { MinimalWatchlistTicker, WatchlistTicker } from "../interfaces/IWatchlistModel";
+import { IWatchlistModel, MinimalWatchlistTicker, WatchlistTicker } from "../interfaces/IWatchlistModel";
 import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
 import { WatchlistModel } from "../models/WatchlistModel";
 
@@ -21,20 +21,22 @@ const transformMinimalToDetailedTickers = async (
   latestStockInfo: LatestStockInfoModel,
   tickers: MinimalWatchlistTicker[]
 ): Promise<WatchlistTicker[]> => {
+  let returnedTickers: WatchlistTicker[] = [];
   const detailedTickers = await latestStockInfo.getLatestStockQuotes(tickers.map((t) => t.symbol));
-  const updatedTickers = tickers.map((t, index) => ({
-    ...t,
-    ...detailedTickers[index]
-  }));
-  return updatedTickers.map((t) => ({
-    ...t,
-    currentVsAlertPricePercentage: calPriceDifferentPercentage(t.price, t.alertPrice),
-    nearHighVsCurrentPercentage: calPriceDifferentPercentage(t.dayHigh, t.price),
-    yearHighVsCurrentPercentage: calPriceDifferentPercentage(t.yearHigh, t.price),
-    nearLowVsCurrentPercentage: calPriceDifferentPercentage(t.dayLow, t.price),
-    yearLowVsCurrentPercentage: calPriceDifferentPercentage(t.yearLow, t.price),
-    earningsAnnouncement: t.earningsAnnouncement as any
-  }));
+  for (const ticker of tickers) {
+    const detailedTicker = detailedTickers.find((t) => t.symbol === ticker.symbol);
+    returnedTickers.push({
+      ...ticker,
+      ...detailedTicker,
+      currentVsAlertPricePercentage: calPriceDifferentPercentage(detailedTicker.price, ticker.alertPrice),
+      nearHighVsCurrentPercentage: calPriceDifferentPercentage(detailedTicker.dayHigh, detailedTicker.price),
+      yearHighVsCurrentPercentage: calPriceDifferentPercentage(detailedTicker.yearHigh, detailedTicker.price),
+      nearLowVsCurrentPercentage: calPriceDifferentPercentage(detailedTicker.dayLow, detailedTicker.price),
+      yearLowVsCurrentPercentage: calPriceDifferentPercentage(detailedTicker.yearLow, detailedTicker.price),
+      earningsAnnouncement: detailedTicker.earningsAnnouncement as any
+    });
+  }
+  return returnedTickers;
 };
 
 const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: LatestStockInfoModel) => {
@@ -43,7 +45,9 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
   watchlistRouter.get("/:name", async (req, res, next) => {
     try {
       const { name } = req.params;
-      let watchlist = await Watchlists.getWatchlist(name);
+      const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
+      if (!userID) return res.status(400).json({ error: "User ID is empty" });
+      let watchlist = await Watchlists.getWatchlist(name, userID);
       if (watchlist) {
         watchlist.tickers = await transformMinimalToDetailedTickers(latestStockInfo, watchlist.tickers);
         res.status(200).json(watchlist);
@@ -105,24 +109,23 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
 
       let originalTickers = await Watchlists.getWatchlistTickers(watchlistName, userID);
       let newTickers: MinimalWatchlistTicker[] = originalTickers.tickers;
+      let updatedWatchlist: IWatchlistModel;
 
-      for (let ticker of req.body as MinimalWatchlistTicker[]) {
-        let stockQuote = await latestStockInfo.getLatestStockQuoteDetailed(ticker.symbol);
-        if (!stockQuote) {
-          res
-            .status(404)
-            .json({ error: `Cannot find the provided stock symbol ${ticker.symbol} to add to the watchlist` });
-          return;
-        }
-        const tickerIndex = newTickers.findIndex((t) => t.symbol === ticker.symbol);
-        // if the submitted ticker is new (not included in the watchlist -> we push it to the tickers list)
-        if (tickerIndex === -1) newTickers.push(ticker);
-        // otherwise we update the alert price of the existing ticker
-        else newTickers[tickerIndex].alertPrice = ticker.alertPrice;
+      let ticker: MinimalWatchlistTicker = req.body;
+      let stockQuote = await latestStockInfo.getLatestStockQuoteDetailed(ticker.symbol);
+      if (!stockQuote) {
+        res
+          .status(404)
+          .json({ error: `Cannot find the provided stock symbol ${ticker.symbol} to add to the watchlist` });
+        return;
       }
-
-      const updatedWatchlist = await Watchlists.updateWatchlist(watchlistName, userID, newTickers);
-
+      const tickerIndex = newTickers.findIndex((t) => t.symbol === ticker.symbol);
+      // if the submitted ticker is new (not included in the watchlist -> we push it to the tickers list)
+      if (tickerIndex === -1) {
+        newTickers.push(ticker);
+        updatedWatchlist = await Watchlists.updateWatchlist(watchlistName, userID, newTickers);
+      } else updatedWatchlist = await Watchlists.updateWatchlistTicker(watchlistName, userID, ticker);
+      // otherwise we
       res.status(200).json(updatedWatchlist);
     } catch (error) {
       console.error("Error updating watchlist:", error);

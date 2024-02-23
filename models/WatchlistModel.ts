@@ -47,7 +47,15 @@ class WatchlistModel extends BaseModel {
   }
 
   public async updateWatchlist(watchlistName: string, userID: string, tickers?: MinimalWatchlistTicker[]) {
-    return this.model.findOneAndUpdate({ watchlistName, userID }, { tickers }, { new: false });
+    return this.model.findOneAndUpdate({ watchlistName, userID }, { tickers }, { new: true, lean: true });
+  }
+
+  public async updateWatchlistTicker(watchlistName: string, userID: string, ticker: MinimalWatchlistTicker) {
+    return this.model.findOneAndUpdate(
+      { watchlistName, userID },
+      { $set: { "tickers.$[el].alertPrice": ticker.alertPrice } },
+      { arrayFilters: [{ "el.symbol": ticker.symbol }], new: true, lean: true }
+    );
   }
 
   public async deleteTickersInWatchlist(watchlistName: string, userID: string, tickerSymbols: string[]) {
@@ -58,8 +66,8 @@ class WatchlistModel extends BaseModel {
     return this.model.find({ userID }, {}, { lean: true });
   }
 
-  public async getWatchlist(watchlistName: string) {
-    return this.model.findOne({ watchlistName }, {}, { lean: true });
+  public async getWatchlist(watchlistName: string, userID: string) {
+    return this.model.findOne({ watchlistName, userID }, {}, { lean: true });
   }
 
   public async getWatchlistTickers(watchlistName: string, userID: string) {
