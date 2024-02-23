@@ -152,7 +152,13 @@ class LatestStockInfoModel extends BaseModel {
   public async searchStockQuotes(input: string, _limit?: number, _offset?: number) {
     const limit = _limit > 20 ? 20 : _limit;
     const offset = _offset ? +_offset : 0;
-    return this.model.find({ symbol: { $regex: input } }, {}, { limit, lean: true }).skip(limit * offset);
+    return this.model
+      .find(
+        { $or: [{ symbol: { $regex: input, $options: "i" } }, { name: { $regex: input, $options: "i" } }] },
+        {},
+        { limit, lean: true }
+      )
+      .skip(limit * offset);
   }
 
   public async deleteStockPriceInfoByTicker(symbol: string): Promise<any> {

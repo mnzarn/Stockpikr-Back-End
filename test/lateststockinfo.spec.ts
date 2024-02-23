@@ -83,7 +83,7 @@ describe("test-lateststockinfo-apis-post", () => {
     const now = getCurrentTimestampSeconds();
     const stockInfos = tickers.map((ticker) => ({
       symbol: ticker,
-      name: "FAKE_TICKER Inc.",
+      name: "COMPANY",
       price: 145.775,
       changesPercentage: 0.32,
       change: 0.465,
@@ -108,12 +108,12 @@ describe("test-lateststockinfo-apis-post", () => {
     }));
     await latestStocks.addBulkTickers(stockInfos);
 
-    // testing. we search stock info based on input. We're using regex -> FAKE_TICKER should include both FAKE_TICKER & FAKE_TICKER_2
-    let result = await latestStocks.searchStockQuotes("FAKE_TICKER");
+    // testing. we search stock info based on input. We're using regex -> FAKE should include both FAKE_TICKER & FAKE_TICKER_2
+    let result = await latestStocks.searchStockQuotes("FAKE");
     expect(result.length).to.eq(2);
     expect(result[0].symbol).to.eq(tickers[0]);
     expect(result[1].symbol).to.eq(tickers[1]);
-    
+
     // by specifying exactly FAKE_TICKER_2, we get only FAKE_TICKER_2
     result = await latestStocks.searchStockQuotes("FAKE_TICKER_2");
     expect(result.length).to.eq(1);
@@ -123,6 +123,11 @@ describe("test-lateststockinfo-apis-post", () => {
     result = await latestStocks.searchStockQuotes("foo bar");
     expect(result.length).to.eq(1);
     expect(result[0].symbol).to.eq(tickers[2]);
+
+    // search by name, should also pass
+    result = await latestStocks.searchStockQuotes("COMP");
+    expect(result.length).to.eq(3);
+    expect(result[0].name).to.eq("COMPANY");
   });
 });
 
