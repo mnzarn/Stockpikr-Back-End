@@ -19,7 +19,7 @@ const stockDataRouterHandler = (stockDataModel: StockDataModel) => {
       // FIXME: change to querying stocks from the backend
       // const stocks = await stockDataModel.getStocks();
       const stockData = await StockApiService.fetchStockData(value, limit as any);
-      console.log("stock data: ", stockData);
+      console.log("Get one user by ID stock data: ", stockData);
       if (stockData) {
         res.json(stockData);
       } else {
@@ -76,10 +76,9 @@ const stockDataRouterHandler = (stockDataModel: StockDataModel) => {
     }
   });
 
-  stockDataRouter.get("/gainers", async (req, res, next) => {
+  stockDataRouter.get("/market/gainers", async (req, res, next) => {
     try {
       const stockGainers = await StockApiService.fetchGainers();
-      console.log(stockGainers);
       if (stockGainers.length > 0) {
         res.json(stockGainers);
       } else {
@@ -90,10 +89,9 @@ const stockDataRouterHandler = (stockDataModel: StockDataModel) => {
       res.status(500).json({ error: "Internal server error" });
     }
   });
-  stockDataRouter.get("/losers", async (req, res, next) => {
+  stockDataRouter.get("/market/losers", async (req, res, next) => {
     try {
       const stockLosers = await StockApiService.fetchLosers();
-      console.log(stockLosers);
       if (stockLosers.length > 0) {
         res.json(stockLosers);
       } else {
@@ -104,10 +102,9 @@ const stockDataRouterHandler = (stockDataModel: StockDataModel) => {
       res.status(500).json({ error: "Internal server error" });
     }
   });
-  stockDataRouter.get("/actives", async (req, res, next) => {
+  stockDataRouter.get("/market/actives", async (req, res, next) => {
     try {
       const stockActives = await StockApiService.fetchActives();
-      console.log(stockActives);
       if (stockActives.length > 0) {
         res.json(stockActives);
       } else {
