@@ -1,5 +1,5 @@
 import { Connection, Model, Schema } from "mongoose";
-import { IPurchasedStockModel } from "../interfaces/IPurchasedStockModel";
+import { IPurchasedStockModel, Ticker } from "../interfaces/IPurchasedStockModel";
 import BaseModel from "./BaseModel";
 
 class PurchasedStockModel extends BaseModel {
@@ -15,14 +15,16 @@ class PurchasedStockModel extends BaseModel {
   public createSchema = (): void => {
     this.schema = new Schema(
       {
-        watchlistID: String,
         userID: String,
-        ticker: String,
-        purchaseDate: Date,
-        purchasePrice: Number,
-        volume: Number,
-        nearLow: Number,
-        nearHigh: Number
+        tickers: [
+          {
+            _id: false,
+            symbol: String,
+            quantity: Number,
+            purchaseDate: Date,
+            purchasePrice: Number,
+          }
+        ]
       },
       {
         collection: "purchasedStocks"
@@ -45,78 +47,47 @@ class PurchasedStockModel extends BaseModel {
     return PurchasedStockModel.instance;
   }
 
-  public async addPurchasedStock(
-    watchlistID: string,
-    userID: string,
-    ticker: string,
-    nearLow: number,
-    nearHigh: number,
-    purchaseDate: Date = null,
-    purchasePrice: number = null,
-    volume: number = null
-  ) {
-    const newPurchasedStock = new this.model({
-      watchlistID: watchlistID,
-      userID: userID,
-      ticker: ticker,
-      purchaseDate: purchaseDate,
-      purchasePrice: purchasePrice,
-      volume: volume,
-      nearLow: nearLow,
-      nearHigh: nearHigh
-    });
+  public async addPurchasedStock(userID: string, tickers: Ticker[]) {
+    const existingDocument = await this.model.findOne({ userID });
 
-    return newPurchasedStock.save();
+    if (existingDocument) {
+        existingDocument.tickers.push(...tickers);
+        console.log("Existing user found, updating tickers:", existingDocument);
+
+        return existingDocument.save();
+    } else {
+        const newPurchasedStock = new this.model({
+            userID: userID,
+            tickers: tickers
+        });
+        console.log("New user created:", newPurchasedStock);
+
+        return newPurchasedStock.save();
+    }
+}
+
+  public async updatePurchasedStock(userID: string, tickers?: Ticker[]) {
+    return this.model.findOneAndUpdate({ userID }, { tickers }, { new: false });
   }
-
-  public async updatePurchasedStock(
-    watchlistID: string,
-    userID: string,
-    ticker: string,
-    nearLow: number,
-    nearHigh: number,
-    purchaseDate: Date = null,
-    purchasePrice: number = null,
-    volume: number = null
-  ) {
-    return this.model.findOneAndUpdate({
-      watchlistID: watchlistID,
-      userID: userID,
-      ticker: ticker,
-      purchaseDate: purchaseDate,
-      purchasePrice: purchasePrice,
-      volume: volume,
-      nearLow: nearLow,
-      nearHigh: nearHigh
-    });
-  }
-
-  public async getPurchasedStock(watchlistID: string, userID: string, ticker: string) {
-    return this.model.findOne({ watchlistID: watchlistID, userID: userID, ticker: ticker });
+  
+  public async getPurchasedStock(watchlistID: string, userID: string, symbol: string) {
+    return this.model.findOne({ watchlistID: watchlistID, userID: userID, symbol: symbol });
   }
 
   public async getPurchasedStocksByUserID(userID: string) {
     return this.model.find({ userID: userID });
   }
 
-  public async getPurchasedStocksByWatchlistID(watchlistID: string) {
-    return this.model.find({ watchlistID: watchlistID });
-  }
-
-  public async getPurchasedStocksByTicker(ticker: string) {
-    return this.model.find({ ticker: ticker });
+  public async getPurchasedStocksByTicker(symbol: string) {
+    return this.model.find({ symbol: symbol });
   }
 
   public async getAllPurchasedStocks() {
     return this.model.find();
   }
 
-  public async deletePurchasedStock(watchlistID: string, userID: string, ticker: string): Promise<any> {
-    return this.model.deleteOne({ watchlistID: watchlistID, userID: userID, ticker: ticker });
-  }
-
-  public async deletePurchasedStocksByWatchlistID(watchlistID: string): Promise<any> {
-    return this.model.deleteMany({ watchlistID: watchlistID });
+  public async deletePurchasedStock(userID: string, symbol: string): Promise<any> {
+    return this.model.deleteOne({ userID: userID, symbol: symbol });
   }
 
   public async deletePurchasedStocksByUserID(userID: string): Promise<any> {
@@ -125,3 +96,4 @@ class PurchasedStockModel extends BaseModel {
 }
 
 export { PurchasedStockModel };
+
