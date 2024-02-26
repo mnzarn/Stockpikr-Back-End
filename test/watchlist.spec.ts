@@ -259,9 +259,9 @@ describe("test-watchlist-apis", () => {
     // case 1: right now, we dont have anything in the lateststockinfo yet -> 404 not found when trying to add new tickers
     await supertest
       .agent(server)
-      .put(`/api/watchlists/${name}`)
+      .put(`/api/watchlists/watchlist/${name}`)
       .query({ userId })
-      .send([{ symbol: newTickerSymbol, alertPrice: 1 }] as MinimalWatchlistTicker[])
+      .send({ symbol: 'unknown symbol', alertPrice: 1 } as MinimalWatchlistTicker)
       .expect(404);
 
     // case 2: we will mock the lateststockinfo data to return something, so we can test updating tickers
@@ -270,7 +270,7 @@ describe("test-watchlist-apis", () => {
     // case 2.1: existing ticker with different alert price, should update
     await supertest
       .agent(server)
-      .put(`/api/watchlists/${name}`)
+      .put(`/api/watchlists/watchlist/${name}`)
       .query({ userId })
       .send({ symbol: "bar", alertPrice: 3 } as MinimalWatchlistTicker)
       .expect(200);
@@ -282,7 +282,7 @@ describe("test-watchlist-apis", () => {
     // case 2.2: one new ticker
     await supertest
       .agent(server)
-      .put(`/api/watchlists/${name}`)
+      .put(`/api/watchlists/watchlist/${name}`)
       .query({ userId })
       .send({ symbol: newTickerSymbol, alertPrice: 10 } as MinimalWatchlistTicker)
       .expect(200);

@@ -99,7 +99,7 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
   });
 
   //Update watchlist information by ID
-  watchlistRouter.put("/:name", async (req, res, next) => {
+  watchlistRouter.put("/watchlist/:name", async (req, res, next) => {
     try {
       // TODO: validate wl id, user id, and body
       const watchlistName = req.params.name;
@@ -127,6 +127,37 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
       } else updatedWatchlist = await Watchlists.updateWatchlistTicker(watchlistName, userID, ticker);
       // otherwise we
       res.status(200).json(updatedWatchlist);
+    } catch (error) {
+      console.error("Error updating watchlist:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  //Update watchlist information by ID
+  watchlistRouter.put("/:name", async (req, res, next) => {
+    try {
+      // TODO: validate wl id, user id, and body
+      const watchlistName = req.params.name;
+      const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
+      if (!watchlistName) return res.status(400).json({ error: "Watchlist name is empty" });
+      if (!userID) return res.status(400).json({ error: "User ID is empty" });
+
+      let originalTickers = await Watchlists.getWatchlistTickers(watchlistName, userID);
+      let updatedTickers: MinimalWatchlistTicker[] = originalTickers.tickers;
+
+      const tickers: MinimalWatchlistTicker[] = req.body;
+      for (const ticker of tickers) {
+        const tickerIndex = updatedTickers.findIndex((t) => t.symbol === ticker.symbol);
+        if (tickerIndex === -1) {
+          res
+            .status(404)
+            .json({ error: `Cannot find the provided stock symbol ${ticker.symbol} in the watchlist to edit` });
+          return;
+        }
+        updatedTickers[tickerIndex].alertPrice = ticker.alertPrice;
+      }
+      await Watchlists.updateWatchlist(watchlistName, userID, updatedTickers);
+      res.status(200).json({});
     } catch (error) {
       console.error("Error updating watchlist:", error);
       res.status(500).json({ error: "Internal server error" });
