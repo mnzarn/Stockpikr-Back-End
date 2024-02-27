@@ -6,10 +6,14 @@ interface IPurchasedStockModel extends mongoose.Document {
 }
 
 interface Ticker {
-  symbol: string,
-  purchaseDate: Date,
-  quantity: number,
-  purchasePrice: number,
+  symbol: string;
+  purchasePrice: number;
+  quantity: number;
+  purchaseDate: Date | null;
+  priceChange?: number;
+  gainOrLoss?: number;
+  marketValue?: number;
 }
 
 export { IPurchasedStockModel, Ticker };
+
