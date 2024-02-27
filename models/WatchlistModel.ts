@@ -1,5 +1,5 @@
 import { Connection, Model, Schema } from "mongoose";
-import { IWatchlistModel, Ticker } from "../interfaces/IWatchlistModel";
+import { IWatchlistModel, MinimalWatchlistTicker } from "../interfaces/IWatchlistModel";
 import BaseModel from "./BaseModel";
 
 class WatchlistModel extends BaseModel {
@@ -35,7 +35,7 @@ class WatchlistModel extends BaseModel {
     this.model = this.connection.model<IWatchlistModel>("watchlists", this.schema);
   }
 
-  public async addWatchlist(userID: string, watchlistName: string, tickers: Ticker[]) {
+  public async addWatchlist(userID: string, watchlistName: string, tickers: MinimalWatchlistTicker[]) {
     const newWatchlist = new this.model({
       watchlistName: watchlistName.trim(), // make sure there's no excessive trailing or leading space
       userID: userID,
@@ -46,8 +46,16 @@ class WatchlistModel extends BaseModel {
     return watchlistName;
   }
 
-  public async updateWatchlist(watchlistName: string, userID: string, tickers?: Ticker[]) {
-    return this.model.findOneAndUpdate({ watchlistName, userID }, { tickers }, { new: false });
+  public async updateWatchlist(watchlistName: string, userID: string, tickers?: MinimalWatchlistTicker[]) {
+    return this.model.findOneAndUpdate({ watchlistName, userID }, { tickers }, { new: true, lean: true });
+  }
+
+  public async updateWatchlistTicker(watchlistName: string, userID: string, ticker: MinimalWatchlistTicker) {
+    return this.model.findOneAndUpdate(
+      { watchlistName, userID },
+      { $set: { "tickers.$[el].alertPrice": ticker.alertPrice } },
+      { arrayFilters: [{ "el.symbol": ticker.symbol }], new: true, lean: true }
+    );
   }
 
   public async deleteTickersInWatchlist(watchlistName: string, userID: string, tickerSymbols: string[]) {
@@ -55,23 +63,23 @@ class WatchlistModel extends BaseModel {
   }
 
   public async getWatchlistsByUserID(userID: string) {
-    return this.model.find({ userID: userID });
+    return this.model.find({ userID }, {}, { lean: true });
   }
 
-  public async getWatchlist(watchlistName: string) {
-    return this.model.findOne({ watchlistName });
+  public async getWatchlist(watchlistName: string, userID: string) {
+    return this.model.findOne({ watchlistName, userID }, {}, { lean: true });
   }
 
   public async getWatchlistTickers(watchlistName: string, userID: string) {
-    return this.model.findOne({ watchlistName, userID })?.select("tickers");
+    return this.model.findOne({ watchlistName, userID }, {}, { lean: true })?.select("tickers");
   }
 
   public async getWatchlistByWatchlistNameAndUserId(userID: string, watchlistName: string) {
-    return this.model.findOne({ watchlistName, userID });
+    return this.model.findOne({ watchlistName, userID }, {}, { lean: true });
   }
 
   public async getWatchlists() {
-    return this.model.find();
+    return this.model.find({}, {}, { lean: true });
   }
 
   public async deleteWatchlist(watchlistName: string, userID: string): Promise<any> {

@@ -5,10 +5,8 @@
     "static/js/206.9f783924.chunk.js": "/StockPikr_Frontend/static/js/206.9f783924.chunk.js",
     "static/media/image-landing-page.jpg": "/StockPikr_Frontend/static/media/image-landing-page.a1ea594a0db8c905910e.jpg",
     "static/media/logo-title-light-mode.png": "/StockPikr_Frontend/static/media/logo-title-light-mode.a1473a3d4f405d3f27d5.png",
+    "static/media/logo-title-light-mode.png": "/StockPikr_Frontend/static/media/logo-title-light-mode.a1473a3d4f405d3f27d5.png",
     "index.html": "/StockPikr_Frontend/index.html"
   },
-  "entrypoints": [
-    "static/css/main.0036d465.css",
-    "static/js/main.e0fb6333.js"
-  ]
+  "entrypoints": ["static/css/main.0036d465.css", "static/js/main.e0fb6333.js"]
 }
