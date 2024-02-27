@@ -37,6 +37,10 @@
 
 /*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT */
 
+/*! sheetjs (C) 2013-present SheetJS -- http://sheetjs.com */
+
+/*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
+
 /**
  * @license React
  * react-dom.production.min.js
