@@ -19,7 +19,7 @@ const stockDataRouterHandler = (stockDataModel: StockDataModel) => {
       // FIXME: change to querying stocks from the backend
       // const stocks = await stockDataModel.getStocks();
       const stockData = await StockApiService.fetchStockData(value, limit as any);
-      console.log("stock data: ", stockData);
+      console.log("Get one user by ID stock data: ", stockData);
       if (stockData) {
         res.json(stockData);
       } else {
@@ -71,7 +71,47 @@ const stockDataRouterHandler = (stockDataModel: StockDataModel) => {
         res.status(404).json({ error: "Stock profile not found" });
       }
     } catch (error) {
-      console.error("Error fetching company profile data:", error);
+      console.error("Error fetching stock profile data:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  stockDataRouter.get("/market/gainers", async (req, res, next) => {
+    try {
+      const stockGainers = await StockApiService.fetchGainers();
+      if (stockGainers.length > 0) {
+        res.json(stockGainers);
+      } else {
+        res.status(404).json({ error: "Stock gainers not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching stock data:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  stockDataRouter.get("/market/losers", async (req, res, next) => {
+    try {
+      const stockLosers = await StockApiService.fetchLosers();
+      if (stockLosers.length > 0) {
+        res.json(stockLosers);
+      } else {
+        res.status(404).json({ error: "Stock losers not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching stock data:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  stockDataRouter.get("/market/actives", async (req, res, next) => {
+    try {
+      const stockActives = await StockApiService.fetchActives();
+      if (stockActives.length > 0) {
+        res.json(stockActives);
+      } else {
+        res.status(404).json({ error: "Stock actives not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching stock data:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
