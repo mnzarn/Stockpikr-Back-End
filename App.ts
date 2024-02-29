@@ -131,7 +131,8 @@ class App {
     );
 
     // Check if user is logged in
-    router.get("/login/active", (req, res) => {
+    router.get("/api/login/active", (req, res) => {
+      console.log("Checking if user is logged in", req.session["uuid"]);
       if (req.session["uuid"]) {
         res.send(true);
       } else {
