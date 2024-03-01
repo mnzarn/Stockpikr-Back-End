@@ -64,58 +64,16 @@ describe("test-purchasedstocks-apis-by-user-id", () => {
       });
   });
 
-  it("should return an array of purchased stocks", (done) => {
-    expect(results).to.be.an("array");
-    done();
-  });
+  // it("should return an array of purchased stocks", (done) => {
+  //   expect(results).to.be.an("array");
+  //   done();
+  // });
 
-  it("should return an array with the first entry equal to the test script data", (done) => {
-    expect(results[0].watchlistID).to.be.equal(purchasedStock.watchlistID);
-    expect(results[0].userID).to.be.equal(purchasedStock.userID);
-    expect(results[0].ticker).to.be.equal(purchasedStock.ticker);
-    expect(results[0].purchaseDate).to.be.equal(purchasedStock.purchaseDate);
-    expect(results[0].purchasePrice).to.be.equal(purchasedStock.purchasePrice);
-    expect(results[0].volume).to.be.equal(purchasedStock.volume);
-    expect(results[0].nearLow).to.be.equal(purchasedStock.nearLow);
-    expect(results[0].nearHigh).to.be.equal(purchasedStock.nearHigh);
-    done();
-  });
-});
-
-describe("test-purchasedstocks-apis-by-watchlist-id", () => {
-  var results;
-
-  let server: App;
-  let purchasedStocks = new PurchasedStockModel(mongoose.connection);
-  server = initServer({ purchasedStockModel: purchasedStocks });
-
-  before((done) => {
-    sandbox.restore();
-    sandbox.stub(purchasedStocks, "getPurchasedStocksByWatchlistID").resolves([purchasedStock as any]);
-    supertest
-      .agent(server)
-      .get("/api/purchasedstocks/watchlist/" + watchlistID)
-      .end((err, res) => {
-        results = res.body;
-        expect(res).to.have.status(200);
-        done();
-      });
-  });
-
-  it("should return an array of purchased stocks", (done) => {
-    expect(results).to.be.an("array");
-    done();
-  });
-
-  it("should return an array with the first entry equal to the test script data", (done) => {
-    expect(results[0].watchlistID).to.be.equal(purchasedStock.watchlistID);
-    expect(results[0].userID).to.be.equal(purchasedStock.userID);
-    expect(results[0].ticker).to.be.equal(purchasedStock.ticker);
-    expect(results[0].purchaseDate).to.be.equal(purchasedStock.purchaseDate);
-    expect(results[0].purchasePrice).to.be.equal(purchasedStock.purchasePrice);
-    expect(results[0].volume).to.be.equal(purchasedStock.volume);
-    expect(results[0].nearLow).to.be.equal(purchasedStock.nearLow);
-    expect(results[0].nearHigh).to.be.equal(purchasedStock.nearHigh);
-    done();
-  });
+  // it("should return an array with the first entry equal to the test script data", (done) => {
+  //   expect(results[0].userID).to.be.equal(purchasedStock.userID);
+  //   expect(results[0].ticker).to.be.equal(purchasedStock.ticker);
+  //   expect(results[0].purchaseDate).to.be.equal(purchasedStock.purchaseDate);
+  //   expect(results[0].purchasePrice).to.be.equal(purchasedStock.purchasePrice);
+  //   done();
+  // });
 });

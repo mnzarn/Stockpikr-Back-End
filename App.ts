@@ -13,7 +13,7 @@ import { StockDataModel } from "./models/StockData";
 import { UserModel } from "./models/UserModel";
 import { WatchlistModel } from "./models/WatchlistModel";
 import latestStockInfoRouterHandler from "./routes/lateststockinfo";
-import purchasedStocksRouterHandler from "./routes/purchasedstocks";
+import purchasedStocksRouterHandler from "./routes/purchasedStocks";
 import stockDataRouterHandler from "./routes/stockPrice";
 import userRouterHandler from "./routes/users";
 import watchlistRouterHandler from "./routes/watchlists";
@@ -156,6 +156,12 @@ class App {
       "/api/watchlists",
       this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
       watchlistRouter
+    );
+
+    this.express.use(
+      "/api/positions",
+      this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
+      purchasedStocksRouter
     );
 
     // Test routes

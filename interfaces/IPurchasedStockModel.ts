@@ -1,14 +1,20 @@
 import mongoose from "mongoose";
 
 interface IPurchasedStockModel extends mongoose.Document {
-  watchlistID: string;
-  userID: string;
-  ticker: string;
-  purchaseDate?: Date;
-  purchasePrice?: number;
-  volume?: number;
-  nearLow: number;
-  nearHigh: number;
+  userID: string,
+  tickers: Ticker[]
 }
 
-export { IPurchasedStockModel };
+interface Ticker {
+  symbol: string;
+  purchasePrice: number;
+  quantity: number;
+  purchaseDate: Date | null;
+  price?: number;
+  priceChange?: number;
+  gainOrLoss?: number;
+  marketValue?: number;
+}
+
+export { IPurchasedStockModel, Ticker };
+

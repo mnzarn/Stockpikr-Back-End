@@ -1,5 +1,9 @@
 import { Connection, Model, Schema } from "mongoose";
-import { IPurchasedStockModel } from "../interfaces/IPurchasedStockModel";
+import { IPurchasedStockModel, Ticker } from "../interfaces/IPurchasedStockModel";
+import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
+
+
+import { ILatestStockInfoModel } from "../interfaces/ILatestStockInfoModel";
 import BaseModel from "./BaseModel";
 
 class PurchasedStockModel extends BaseModel {
@@ -15,14 +19,20 @@ class PurchasedStockModel extends BaseModel {
   public createSchema = (): void => {
     this.schema = new Schema(
       {
-        watchlistID: String,
         userID: String,
-        ticker: String,
-        purchaseDate: Date,
-        purchasePrice: Number,
-        volume: Number,
-        nearLow: Number,
-        nearHigh: Number
+        tickers: [
+          {
+            _id: false,
+            symbol: String,
+            quantity: Number,
+            purchaseDate: Date,
+            purchasePrice: Number,
+            price: Number,
+            priceChange: Number,
+            gainOrLoss: Number,
+            marketValue: Number,
+          }
+        ]
       },
       {
         collection: "purchasedStocks"
@@ -45,83 +55,85 @@ class PurchasedStockModel extends BaseModel {
     return PurchasedStockModel.instance;
   }
 
-  public async addPurchasedStock(
-    watchlistID: string,
-    userID: string,
-    ticker: string,
-    nearLow: number,
-    nearHigh: number,
-    purchaseDate: Date = null,
-    purchasePrice: number = null,
-    volume: number = null
-  ) {
-    const newPurchasedStock = new this.model({
-      watchlistID: watchlistID,
-      userID: userID,
-      ticker: ticker,
-      purchaseDate: purchaseDate,
-      purchasePrice: purchasePrice,
-      volume: volume,
-      nearLow: nearLow,
-      nearHigh: nearHigh
-    });
+  public async addPurchasedStock(userID: string, tickers: Ticker[]) {
+    const existingDocument = await this.model.findOne({ userID });
 
-    return newPurchasedStock.save();
+    if (existingDocument) {
+        existingDocument.tickers.push(...tickers);
+        console.log("Existing user found, updating tickers:", existingDocument);
+
+        return existingDocument.save();
+    } else {
+        const newPurchasedStock = new this.model({
+            userID: userID,
+            tickers: tickers.map(ticker => ({
+              symbol: ticker.symbol,
+              quantity: ticker.quantity,
+              purchaseDate: ticker.purchaseDate,
+              purchasePrice: ticker.purchasePrice,
+              price: 0,
+              priceChange: 0, // Default value for price change
+              gainOrLoss: 0, // Default value for gain or loss
+              marketValue: 0, // Default value for market value
+            })),
+        });
+        console.log("New user created:", newPurchasedStock);
+
+        return newPurchasedStock.save();
+    }
+}
+
+  public async updatePurchasedStock(userID: string, tickers?: Ticker[]) {
+    return this.model.findOneAndUpdate({ userID }, { tickers }, { new: false });
   }
-
-  public async updatePurchasedStock(
-    watchlistID: string,
-    userID: string,
-    ticker: string,
-    nearLow: number,
-    nearHigh: number,
-    purchaseDate: Date = null,
-    purchasePrice: number = null,
-    volume: number = null
-  ) {
-    return this.model.findOneAndUpdate({
-      watchlistID: watchlistID,
-      userID: userID,
-      ticker: ticker,
-      purchaseDate: purchaseDate,
-      purchasePrice: purchasePrice,
-      volume: volume,
-      nearLow: nearLow,
-      nearHigh: nearHigh
-    });
-  }
-
-  public async getPurchasedStock(watchlistID: string, userID: string, ticker: string) {
-    return this.model.findOne({ watchlistID: watchlistID, userID: userID, ticker: ticker });
+  
+  public async getPurchasedStock(watchlistID: string, userID: string, symbol: string) {
+    return this.model.findOne({ watchlistID: watchlistID, userID: userID, symbol: symbol });
   }
 
   public async getPurchasedStocksByUserID(userID: string) {
-    return this.model.find({ userID: userID });
+    const purchasedStocks = await this.model.find({ userID: userID });
+
+    const tickerSymbols = purchasedStocks.flatMap(stock => stock.tickers.map(ticker => ticker.symbol));
+    const latestStockInfoModel = LatestStockInfoModel.getInstance(this.connection);
+    const stockQuotes = await latestStockInfoModel.getLatestStockQuotes(tickerSymbols);
+
+    purchasedStocks.forEach(stock => {
+        stock.tickers.forEach(ticker => {
+            const stockQuote = stockQuotes.find(quote => quote.symbol === ticker.symbol);
+            if (stockQuote) {
+                ticker.price = this.calculatePrice(stockQuote);
+                ticker.priceChange = this.calculatePriceChange(ticker, stockQuote);
+                ticker.gainOrLoss = this.calculateGainOrLoss(ticker, stockQuote);
+                ticker.marketValue = this.calculateMarketValue(ticker, stockQuote);
+            }
+        });
+    });
+
+    return purchasedStocks;
   }
 
-  public async getPurchasedStocksByWatchlistID(watchlistID: string) {
-    return this.model.find({ watchlistID: watchlistID });
+  public async deleteTickersInPurchasedStock(userID: string, tickerSymbols: string[]) {
+    return this.model.updateMany({ userID }, { $pull: { tickers: { symbol: { $in: tickerSymbols } } } });
   }
 
-  public async getPurchasedStocksByTicker(ticker: string) {
-    return this.model.find({ ticker: ticker });
+  private calculatePriceChange(ticker: Ticker, stockQuote: ILatestStockInfoModel): number {
+  return +(stockQuote.price - ticker.purchasePrice).toFixed(2);
   }
 
-  public async getAllPurchasedStocks() {
-    return this.model.find();
+  private calculateMarketValue(ticker: Ticker, stockQuote: ILatestStockInfoModel): number {
+    return +(stockQuote.price * ticker.quantity).toFixed(2);
   }
 
-  public async deletePurchasedStock(watchlistID: string, userID: string, ticker: string): Promise<any> {
-    return this.model.deleteOne({ watchlistID: watchlistID, userID: userID, ticker: ticker });
+  private calculateGainOrLoss(ticker: Ticker, stockQuote: ILatestStockInfoModel): number {
+    return +((stockQuote.price - ticker.purchasePrice) * ticker.quantity).toFixed(2);
   }
 
-  public async deletePurchasedStocksByWatchlistID(watchlistID: string): Promise<any> {
-    return this.model.deleteMany({ watchlistID: watchlistID });
+  private calculatePrice(stockQuote: ILatestStockInfoModel): number {
+    return +stockQuote.price.toFixed(2);
   }
 
-  public async deletePurchasedStocksByUserID(userID: string): Promise<any> {
-    return this.model.deleteMany({ userID: userID });
-  }
 }
 
 export { PurchasedStockModel };
+
