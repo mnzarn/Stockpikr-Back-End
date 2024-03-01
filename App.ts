@@ -99,14 +99,10 @@ class App {
         failureRedirect: "/StockPikr_Frontend/#/signin"
       }),
       async (req, res) => {
-        console.log("Successful login");
-        console.log("req info - ", req.user);
-
         const googleProfile: any = JSON.parse(JSON.stringify(req.user));
         let doesUserExist: any = await this.models.userModel.getUserByAuth(googleProfile.id);
 
         if (!doesUserExist) {
-          console.log("User doesn't exist. Creating a new entry for this user in the DB");
           let newUser: any = await this.models.userModel.addUser(
             googleProfile.id,
             googleProfile.name.givenName,
@@ -115,14 +111,11 @@ class App {
             "123456789",
             googleProfile.photos[0].value
           );
-          console.log("New user created with ID: ", newUser);
           req.session["uuid"] = newUser;
         } else {
-          console.log("User already exists, logging in...");
           req.session["uuid"] = doesUserExist.userID;
         }
         req.session.save();
-        console.log("Session info has been saved as follows - ", req.session);
 
         // TODO: Have to change this to a relative link, otherwise the session information is lost
         // Solution is to inject frontend build files into the backend and serve them
@@ -132,7 +125,6 @@ class App {
 
     // Check if user is logged in
     router.get("/api/login/active", (req, res) => {
-      console.log("Checking if user is logged in", req.session["uuid"]);
       if (req.session["uuid"]) {
         res.send(true);
       } else {
@@ -148,7 +140,6 @@ class App {
     router.get("/logout", (req, res) => {
       req.session.destroy((err) => {
         if (err) {
-          console.log("Error destroying session:", err);
           return res.status(500).send("Internal Server Error");
         }
         res.redirect("/StockPikr_Frontend/#/signin");
@@ -176,11 +167,23 @@ class App {
     //   watchlistRouter(req, res, next);
     // });
 
-    this.express.use("/api/stockdata", stockDataRouter);
+    this.express.use(
+      "/api/stockdata",
+      this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
+      stockDataRouter
+    );
 
-    this.express.use("/api/purchasedstocks", purchasedStocksRouter);
+    this.express.use(
+      "/api/purchasedstocks",
+      this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
+      purchasedStocksRouter
+    );
 
-    this.express.use("/api/lateststockinfo", latestStockInfoRouter);
+    this.express.use(
+      "/api/lateststockinfo",
+      this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
+      latestStockInfoRouter
+    );
 
     this.express.use("/", router);
     this.express.use("/StockPikr_Frontend", express.static("public")); // Frontend served at localhost:8080/StockPikr_Frontend

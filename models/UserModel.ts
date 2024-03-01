@@ -54,7 +54,6 @@ class UserModel extends BaseModel {
     profilePic: string
   ) {
     const userID = uuidv4();
-    console.log(userID);
 
     const newUser = new this.model({
       authID: authID,

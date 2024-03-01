@@ -73,7 +73,6 @@ class StockDataModel extends BaseModel {
   public async getStocks() {
     try {
       // TODO: add pagination
-      console.log("model: ", this.model);
       const users = await this.model.find();
       return users || [];
     } catch (err) {
