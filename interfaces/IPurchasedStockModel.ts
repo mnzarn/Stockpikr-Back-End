@@ -10,6 +10,7 @@ interface Ticker {
   purchasePrice: number;
   quantity: number;
   purchaseDate: Date | null;
+  price?: number;
   priceChange?: number;
   gainOrLoss?: number;
   marketValue?: number;

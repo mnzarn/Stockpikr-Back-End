@@ -2,8 +2,8 @@ import { Connection, Model, Schema } from "mongoose";
 import { IPurchasedStockModel, Ticker } from "../interfaces/IPurchasedStockModel";
 import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
 
-import { IStockQuote } from "../interfaces/IStockQuote";
 
+import { ILatestStockInfoModel } from "../interfaces/ILatestStockInfoModel";
 import BaseModel from "./BaseModel";
 
 class PurchasedStockModel extends BaseModel {
@@ -27,6 +27,10 @@ class PurchasedStockModel extends BaseModel {
             quantity: Number,
             purchaseDate: Date,
             purchasePrice: Number,
+            price: Number,
+            priceChange: Number,
+            gainOrLoss: Number,
+            marketValue: Number,
           }
         ]
       },
@@ -62,7 +66,16 @@ class PurchasedStockModel extends BaseModel {
     } else {
         const newPurchasedStock = new this.model({
             userID: userID,
-            tickers: tickers
+            tickers: tickers.map(ticker => ({
+              symbol: ticker.symbol,
+              quantity: ticker.quantity,
+              purchaseDate: ticker.purchaseDate,
+              purchasePrice: ticker.purchasePrice,
+              price: 0,
+              priceChange: 0, // Default value for price change
+              gainOrLoss: 0, // Default value for gain or loss
+              marketValue: 0, // Default value for market value
+            })),
         });
         console.log("New user created:", newPurchasedStock);
 
@@ -81,67 +94,44 @@ class PurchasedStockModel extends BaseModel {
   public async getPurchasedStocksByUserID(userID: string) {
     const purchasedStocks = await this.model.find({ userID: userID });
 
-    // const tickerSymbols = purchasedStocks.flatMap(stock => stock.tickers.map(ticker => ticker.symbol));
-    // const stockQuotes = await this.fetchStockQuotes(tickerSymbols);
+    const tickerSymbols = purchasedStocks.flatMap(stock => stock.tickers.map(ticker => ticker.symbol));
+    const latestStockInfoModel = LatestStockInfoModel.getInstance(this.connection);
+    const stockQuotes = await latestStockInfoModel.getLatestStockQuotes(tickerSymbols);
 
-    // purchasedStocks.forEach(stock => {
-    //     stock.tickers.forEach(ticker => {
-    //         const stockQuote = stockQuotes.find(quote => quote.symbol === ticker.symbol);
-    //         if (stockQuote) {
-    //             ticker.priceChange = this.calculatePriceChange(ticker, stockQuote);
-    //             ticker.gainOrLoss = this.calculateGainOrLoss(ticker, stockQuote);
-    //             ticker.marketValue = this.calculateMarketValue(ticker, stockQuote);
-    //         }
-    //     });
-    // });
+    purchasedStocks.forEach(stock => {
+        stock.tickers.forEach(ticker => {
+            const stockQuote = stockQuotes.find(quote => quote.symbol === ticker.symbol);
+            if (stockQuote) {
+                ticker.price = this.calculatePrice(stockQuote);
+                ticker.priceChange = this.calculatePriceChange(ticker, stockQuote);
+                ticker.gainOrLoss = this.calculateGainOrLoss(ticker, stockQuote);
+                ticker.marketValue = this.calculateMarketValue(ticker, stockQuote);
+            }
+        });
+    });
 
     return purchasedStocks;
-}
+  }
 
   public async deleteTickersInPurchasedStock(userID: string, tickerSymbols: string[]) {
     return this.model.updateMany({ userID }, { $pull: { tickers: { symbol: { $in: tickerSymbols } } } });
   }
 
-  // private calculatePriceChange(ticker: Ticker, stockQuote: IStockQuote): number {
-  //   return stockQuote.price - ticker.purchasePrice;
-  // }
+  private calculatePriceChange(ticker: Ticker, stockQuote: ILatestStockInfoModel): number {
+  return +(stockQuote.price - ticker.purchasePrice).toFixed(2);
+  }
 
-  // private calculateMarketValue(ticker: Ticker, stockQuote: IStockQuote): number {
-  //   return stockQuote.price * ticker.quantity;
-  // }
+  private calculateMarketValue(ticker: Ticker, stockQuote: ILatestStockInfoModel): number {
+    return +(stockQuote.price * ticker.quantity).toFixed(2);
+  }
 
-  // private calculateGainOrLoss(ticker: Ticker, stockQuote: IStockQuote): number {
-  //   return (stockQuote.price - ticker.purchasePrice) * ticker.quantity;
-  // }
+  private calculateGainOrLoss(ticker: Ticker, stockQuote: ILatestStockInfoModel): number {
+    return +((stockQuote.price - ticker.purchasePrice) * ticker.quantity).toFixed(2);
+  }
 
-  // private async fetchStockQuotes(tickerSymbols: string[]): Promise<IStockQuote[]> {
-  //   const latestStockInfoModel = LatestStockInfoModel.getInstance(this.connection);
-  //   const stockQuotes = await latestStockInfoModel.getLatestStockQuotes(tickerSymbols);
-  //   return stockQuotes.map(quote => ({
-  //       symbol: quote.symbol,
-  //       name: quote.name,
-  //       price: quote.price,
-  //       changesPercentage: quote.changesPercentage,
-  //       change: quote.change,
-  //       dayLow: quote.dayLow,
-  //       dayHigh: quote.dayHigh,
-  //       yearHigh: quote.yearHigh,
-  //       yearLow: quote.yearLow,
-  //       marketCap: quote.marketCap,
-  //       priceAvg50: quote.priceAvg50,
-  //       priceAvg200: quote.priceAvg200,
-  //       exchange: quote.exchange,
-  //       volume: quote.volume,
-  //       avgVolume: quote.avgVolume,
-  //       open: quote.open,
-  //       previousClose: quote.previousClose,
-  //       eps: quote.eps,
-  //       pe: quote.pe,
-  //       earningsAnnouncement: quote.earningsAnnouncement.toString(),
-  //       sharesOutstanding: quote.sharesOutstanding
-  //   }));
-  // }
-
+  private calculatePrice(stockQuote: ILatestStockInfoModel): number {
+    return +stockQuote.price.toFixed(2);
+  }
 
 }
 
