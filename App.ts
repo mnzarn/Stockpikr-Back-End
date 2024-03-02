@@ -13,7 +13,7 @@ import { StockDataModel } from "./models/StockData";
 import { UserModel } from "./models/UserModel";
 import { WatchlistModel } from "./models/WatchlistModel";
 import latestStockInfoRouterHandler from "./routes/lateststockinfo";
-import purchasedStocksRouterHandler from "./routes/purchasedStocks";
+import purchasedStocksRouterHandler from "./routes/purchasedstocks";
 import stockDataRouterHandler from "./routes/stockPrice";
 import userRouterHandler from "./routes/users";
 import watchlistRouterHandler from "./routes/watchlists";
