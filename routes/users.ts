@@ -8,7 +8,6 @@ const userRouterHandler = (Users: UserModel) => {
   router.get("/:id", async (req, res, next) => {
     try {
       const id = req.session["uuid"] ? req.session["uuid"] : req.params.id;
-      console.log("Here is the id: ", id);
       const user = await Users.getUserByID(id);
       if (user) {
         res.json(user);
@@ -40,7 +39,6 @@ const userRouterHandler = (Users: UserModel) => {
   router.put("/:id", async (req, res, next) => {
     try {
       const id = req.session["uuid"] ? req.session["uuid"] : req.params.id;
-      console.log("Here is the id: ", id);
       const { firstName, lastName, email, phoneNumber, profilePic } = req.body;
 
       const updatedUser = await Users.updateUser(id, firstName, lastName, email, phoneNumber, profilePic);
