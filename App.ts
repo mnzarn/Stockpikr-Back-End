@@ -79,15 +79,17 @@ class App {
       res.send("Express + TypeScript Server");
     });
 
-    router.get(
-      "/login/federated/google",
-      passport.authenticate("google", {
-        scope: ["profile", "email"]
-      }),
-      (req, res) => {
-        res.send("Successful login");
-      }
-    );
+    // Alias: Allow both /auth/google and /login/federated/google
+router.get(
+  ["/auth/google", "/login/federated/google"],
+  passport.authenticate("google", {
+    scope: ["profile", "email"]
+  }),
+  (req, res) => {
+    res.send("Successful login");
+  }
+);
+
 
     router.get(
       "/login/federated/google/callback",
