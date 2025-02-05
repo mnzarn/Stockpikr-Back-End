@@ -61,7 +61,12 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
-      
+      - name: Set Environment Variables for Azure Functions
+        run: |
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}" >> $GITHUB_ENV
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
