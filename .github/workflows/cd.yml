@@ -30,11 +30,11 @@ jobs:
           echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/stockpikr_id_rsa
 
-      - name: Setup production
-        run: pm2 deploy production setup
+      #- name: Setup production
+      #  run: pm2 deploy production setup
 
-      - name: Deploy to production
-        run: pm2 deploy production --force
+      #- name: Deploy to production
+      #  run: pm2 deploy production --force
 
-      - name: Clean up ssh keys
-        run: rm -rf ~/.ssh/
+      #- name: Clean up ssh keys
+       # run: rm -rf ~/.ssh/
