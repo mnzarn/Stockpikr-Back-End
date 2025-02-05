@@ -32,6 +32,15 @@ jobs:
 
       - name: Setup production
         run: pm2 deploy production setup
+      - name: Set Google OAuth Secrets on Remote Server
+        run: |
+          ssh -i ~/.ssh/stockpikr_id_rsa user@your-server-ip << 'EOF'
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" | sudo tee -a /etc/environment
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" | sudo tee -a /etc/environment
+          echo "GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}" | sudo tee -a /etc/environment
+          sudo systemctl restart pm2-stockpikr
+          EOF
+
       - name: Deploy to production
         run: pm2 deploy production --force
 
