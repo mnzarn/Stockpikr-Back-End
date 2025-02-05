@@ -174,6 +174,15 @@ router.get(
     // this.express.use("/test/api/watchlists", (req, res, next) => {
     //   watchlistRouter(req, res, next);
     // });
+    // Debug route to check all registered routes
+    router.get("/debug/routes", (req, res) => {
+        res.json(this.express._router.stack
+            .filter((r: any) => r.route)
+            .map((r: any) => r.route.path));
+    });
+
+    // Setup all existing routes
+    this.express.use("/", router);
 
     this.express.use(
       "/api/stockdata",
