@@ -22,7 +22,7 @@ module.exports = {
       host: ["40.78.98.127"],
       ref: "origin/main",
       repo: "git@github.com:mnzarn/Stockpikr-Back-End.git",
-      path: "/home/azureuser/stockpikr-backend",
+      path: "/home/azureuser/Stockpikr-Back-End",
 
       "pre-setup": "npm install -g tsx pm2 && rm -rf ~/stockpikr-backend",
       "post-setup": "cp ~/.env ~/stockpikr-backend/.env",
