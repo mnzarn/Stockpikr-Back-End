@@ -1,51 +1,42 @@
-name: Deploy Backend to Azure VM
+name: deploy-stockpikr-backend
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  deploy-to-vm:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        node-version: ["20"]
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      - name: Set Up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "20"
+          node-version: ${{ matrix.node-version }}
 
-      - name: Install Dependencies
-        run: yarn install --frozen-lockfile
+      - name: Install PM2 and TSX
+        run: sudo npm install -g pm2 tsx
 
-      - name: Build Backend
-        run: yarn build
-
-      - name: Setup SSH and Deploy to VM
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.STOCKPIKR_SSH_PRIVATE_KEY }}
-          VM_HOST: ${{ secrets.AZURE_VM_HOST }}
-          VM_USER: "azureuser"
+      - name: Setup SSH Keys
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.STOCKPIKR_SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/stockpikr_id_rsa
+          echo "${{ secrets.STOCKPIKR_SSH_PRIVATE_KEY }}" > ~/.ssh/stockpikr_id_rsa
           echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/stockpikr_id_rsa
           chmod 644 ~/.ssh/known_hosts
-          
 
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/stockpikr_id_rsa $VM_USER@$VM_HOST << 'EOF'
-            cd ~/Stockpikr-Back-End
-            git pull origin main
-            yarn install --frozen-lockfile
-            npx tsc
-            pm2 stop stockpikr-backend || true  # Stop old process (ignore error if not running)
-            node dist/index.js > backend.log 2>&1 &  # Restart backend without PM2
-            echo "Deployment complete!"
-          EOF
+      - name: Setup Production Server
+        run: pm2 deploy production setup
 
-          # Clean up SSH keys for security
-          rm -rf ~/.ssh/
+      - name: Deploy to Production
+        run: pm2 deploy production --force
+
+      - name: Clean Up SSH Keys
+        run: rm -rf ~/.ssh/
