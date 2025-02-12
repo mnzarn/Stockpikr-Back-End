@@ -31,7 +31,7 @@ jobs:
           VM_USER: "azureuser"
         run: |
           mkdir -p ~/.ssh/
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/stockpikr_id_rsa
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/stockpikr_id_rsa  # Fixes formatting
           chmod 600 ~/.ssh/stockpikr_id_rsa
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/stockpikr_id_rsa $VM_USER@$VM_HOST << 'EOF'
             cd ~/Stockpikr-Back-End
