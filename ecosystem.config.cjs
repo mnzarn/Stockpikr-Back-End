@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "stockpikr-backend",
-      script: "./src/index.ts", // Use TypeScript entry file directly
+      script: "./index.ts", // Use TypeScript entry file directly
       interpreter: "tsx", // Use `tsx` to run TypeScript directly without compiling
       exec_mode: "fork", // Run as a single instance (not clustered)
       instances: 1,
