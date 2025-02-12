@@ -24,8 +24,8 @@ module.exports = {
       repo: "git@github.com:mnzarn/Stockpikr-Back-End.git",
       path: "/home/azureuser/Stockpikr-Back-End",
       
-      "pre-setup": "mkdir -p ~/.npm-global && npm config set prefix '~/.npm-global' && npm install tsx --prefix ~/.npm-global",
-      
+      "pre-setup": "rm -rf /home/azureuser/Stockpikr-Back-End/source && npm install -g tsx pm2",
+
 
       "post-deploy":
         "cd /home/azureuser/Stockpikr-Back-End && git pull && yarn install && pm2 startOrRestart ecosystem.config.js --env production"
