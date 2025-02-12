@@ -35,17 +35,17 @@ jobs:
           echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/stockpikr_id_rsa
           chmod 644 ~/.ssh/known_hosts
-          # Install pm2 globally
-          # Install pm2 globally
-          npm install pm2 --prefix ~/.npm-global
-          export PATH="$HOME/.npm-global/bin:$PATH"
           
-          # Debugging: Check if PM2 is installed
-          pm2 --version
 
-          # PM2 Deployment
-          pm2 deploy production setup
-          pm2 deploy production --force
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/stockpikr_id_rsa $VM_USER@$VM_HOST << 'EOF'
+            cd ~/Stockpikr-Back-End
+            git pull origin main
+            yarn install --frozen-lockfile
+            npx tsc
+            pm2 stop stockpikr-backend || true  # Stop old process (ignore error if not running)
+            node dist/index.js > backend.log 2>&1 &  # Restart backend without PM2
+            echo "Deployment complete!"
+          EOF
 
           # Clean up SSH keys for security
           rm -rf ~/.ssh/
