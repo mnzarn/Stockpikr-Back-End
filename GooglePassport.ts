@@ -21,7 +21,7 @@ class GooglePassport {
             // Process the profile data (e.g., save user to DB if necessary)
             done(null, profile);
           } catch (error) {
-            done(error, null);
+            done(null, profile);
           }
         }
       )

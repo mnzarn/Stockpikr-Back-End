@@ -2,8 +2,8 @@ import { App, Models } from "./App";
 import { Middleware } from "./services/middleware";
 
 export const initServer = (models: Models, middleware?: Middleware) => {
-  let app = new App(models).withMiddleware(middleware);
+  const defaultMiddleware = new Middleware(); // Ensure a default middleware exists
+  const app = new App(models).withMiddleware(middleware ?? defaultMiddleware); // Use default if undefined
   app.routes();
-  const server = app.express;
-  return server;
+  return app.express;
 };
