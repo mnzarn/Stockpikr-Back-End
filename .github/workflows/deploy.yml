@@ -1,26 +1,44 @@
-name: Deploy Backend to Azure Web App
+name: Deploy Backend to Azure VM
+
 on:
   push:
     branches:
       - main
+
 jobs:
-  build-and-deploy:
+  deploy-to-vm:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "20"
-      - name: Install Dependencies
-        run: npm install
-      - name: Build Backend
-        run: npm run build
 
-      # 🔹 Use Publish Profile for Deployment (No Azure Login Required)
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: "StockpikrBackend"
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: .
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build Backend
+        run: yarn build
+
+      - name: Setup SSH and Deploy to VM
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.STOCKPIKR_SSH_PRIVATE_KEY }}
+          VM_HOST: ${{ secrets.AZURE_VM_HOST }}
+          VM_USER: "azureuser"
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/stockpikr_id_rsa
+          chmod 600 ~/.ssh/stockpikr_id_rsa
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/stockpikr_id_rsa $VM_USER@$VM_HOST << 'EOF'
+            cd ~/Stockpikr-Back-End
+            git pull origin main
+            yarn install --frozen-lockfile
+            npx tsc
+            pm2 restart stockpikr-backend || pm2 start dist/index.js --name stockpikr-backend
+            pm2 save
+          EOF
+          rm -rf ~/.ssh/
