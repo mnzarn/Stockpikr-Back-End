@@ -27,8 +27,8 @@ module.exports = {
       "pre-setup": "rm -rf /home/azureuser/Stockpikr-Back-End/source && npm install -g tsx pm2 yarn",
 
 
-      "post-deploy":
-        "cd /home/azureuser/Stockpikr-Back-End && git pull && yarn install && pm2 startOrRestart ecosystem.config.js --env production"
+      "post-deploy": "export PATH=$PATH:$(npm bin -g) && cd /home/azureuser/Stockpikr-Back-End && git pull && yarn install && pm2 startOrRestart ecosystem.config.js --env production"
+
     }
   }
 };
