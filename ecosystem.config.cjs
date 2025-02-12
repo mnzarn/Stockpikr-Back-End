@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "stockpikr-backend",
-      script: "./src/index.ts",
+      script: "./index.ts",
       interpreter: "/home/azureuser/.npm-global/bin/tsx", // Use locally installed tsx
       exec_mode: "fork",
       instances: 1,
