@@ -36,7 +36,12 @@ jobs:
         run: pm2 deploy production setup
 
       - name: Deploy to Production
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_CALLBACK_URL: ${{ secrets.GOOGLE_CALLBACK_URL }}
         run: pm2 deploy production --force
+
 
       - name: Clean Up SSH Keys
         run: rm -rf ~/.ssh/
