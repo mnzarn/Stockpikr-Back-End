@@ -32,6 +32,7 @@ export interface Models {
 
 class App {
   public express: express.Application;
+  public FMP_API_KEY: string | undefined;
   public googlePassport: GooglePassport;
 
   private middlewareInstance: Middleware;
@@ -40,6 +41,7 @@ class App {
     this.express = express();
     this.middleware();
     this.googlePassport = new GooglePassport();
+    this.FMP_API_KEY = "&apikey=" + config.FMP_API_KEY;
   }
 
   withMiddleware(middleware: Middleware) {
@@ -59,7 +61,7 @@ class App {
   public routes(): void {
     const router = express.Router();
 
-    // Custom API routes
+    // Setup all custom routers
     const userRouter = userRouterHandler(this.models.userModel);
     const stockDataRouter = stockDataRouterHandler(this.models.stockDataModel);
     const watchlistRouter = watchlistRouterHandler(this.models.watchlistModel, this.models.latestStockInfoModel);
@@ -90,7 +92,7 @@ class App {
         req.session.save();
         next();
       },
-      passport.authenticate("google", { failureRedirect: "https://agreeable-ground-08e4a8b1e.4.azurestaticapps.net/#/signin" }),
+      passport.authenticate("google", { failureRedirect: "https://agreeable-ground-08e4a8b1e.4.azurestaticapps.net/signin" }),
       async (req, res) => {
         const googleProfile: any = JSON.parse(JSON.stringify(req.user));
         let doesUserExist: any = await this.models.userModel.getUserByAuth(googleProfile.id);
@@ -111,7 +113,7 @@ class App {
         req.session.save();
 
         // Redirect user to frontend dashboard after login
-        res.redirect("https://agreeable-ground-08e4a8b1e.4.azurestaticapps.net/#/dashboard");
+        res.redirect("https://agreeable-ground-08e4a8b1e.4.azurestaticapps.net/dashboard");
       }
     );
 
@@ -126,11 +128,11 @@ class App {
         if (err) {
           return res.status(500).send("Internal Server Error");
         }
-        res.redirect("https://agreeable-ground-08e4a8b1e.4.azurestaticapps.net/#/signin");
+        res.redirect("https://agreeable-ground-08e4a8b1e.4.azurestaticapps.net/signin");
       });
     });
 
-    // Set up API routes
+    // Set up all existing routes
     this.express.use("/", router);
 
     this.express.use(
@@ -169,7 +171,7 @@ class App {
       latestStockInfoRouter
     );
 
-    // Serve the frontend if needed
+    // Serve the frontend from the backend if needed
     this.express.use("/", express.static("public"));
   }
 }
