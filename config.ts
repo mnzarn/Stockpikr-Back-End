@@ -12,3 +12,8 @@ export const config = {
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CLIENT_URL,
   NODE_ENV: process.env.NODE_ENV || "production"
 };
+console.log("Google OAuth Config:", {
+  GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID ? "Loaded " : "MISSING",
+  GOOGLE_CLIENT_SECRET: config.GOOGLE_CLIENT_SECRET ? "Loaded " : "MISSING",
+  GOOGLE_CALLBACK_URL: config.GOOGLE_CALLBACK_URL ? "Loaded " : " MISSING"
+});
