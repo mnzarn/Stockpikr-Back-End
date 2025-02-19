@@ -18,9 +18,9 @@ import stockDataRouterHandler from "./routes/stockPrice";
 import userRouterHandler from "./routes/users";
 import watchlistRouterHandler from "./routes/watchlists";
 import { Middleware } from "./services/middleware";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// workaround when using ES module: https://iamwebwiz.medium.com/how-to-fix-dirname-is-not-defined-in-es-module-scope-34d94a86694d
+const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+const __dirname = path.dirname(__filename); // get the name of the directory
 
 export interface Models {
   userModel?: UserModel;
@@ -35,6 +35,7 @@ class App {
   public FMP_API_KEY: string | undefined;
   public googlePassport: GooglePassport;
 
+  // depdendency injection for middleware & mongo models for easy testing
   private middlewareInstance: Middleware;
 
   constructor(private models: Models) {
@@ -60,8 +61,7 @@ class App {
 
   public routes(): void {
     const router = express.Router();
-
-    // Setup all custom routers
+    // setup all custom routers
     const userRouter = userRouterHandler(this.models.userModel);
     const stockDataRouter = stockDataRouterHandler(this.models.stockDataModel);
     const watchlistRouter = watchlistRouterHandler(this.models.watchlistModel, this.models.latestStockInfoModel);
@@ -75,24 +75,31 @@ class App {
       next();
     });
 
-    router.get("/", (req, res) => {
+    router.get("/", (req, res, next) => {
       res.send("Express + TypeScript Server");
     });
 
-    // Google OAuth Login Route
-    router.get(
-      ["/auth/google", "/login/federated/google"],
-      passport.authenticate("google", { scope: ["profile", "email"] })
-    );
+    // Alias: Allow both /auth/google and /login/federated/google
+router.get(
+  ["/auth/google", "/login/federated/google"],
+  passport.authenticate("google", {
+    scope: ["profile", "email"]
+  }),
+  (req, res) => {
+    res.send("Successful login");
+  }
+);
 
-    // Google OAuth Callback Route (Handles login success & failure)
+
     router.get(
-      ["/auth/google/callback", "/login/federated/google/callback"],
+      "/login/federated/google/callback",
       (req, res, next) => {
         req.session.save();
         next();
       },
-      passport.authenticate("google", { failureRedirect: "https://agreeable-ground-08e4a8b1e.4.azurestaticapps.net/signin" }),
+      passport.authenticate("google", {
+        failureRedirect: "/StockPikr_Frontend/#/signin"
+      }),
       async (req, res) => {
         const googleProfile: any = JSON.parse(JSON.stringify(req.user));
         let doesUserExist: any = await this.models.userModel.getUserByAuth(googleProfile.id);
@@ -112,28 +119,34 @@ class App {
         }
         req.session.save();
 
-        // Redirect user to frontend dashboard after login
-        res.redirect("https://agreeable-ground-08e4a8b1e.4.azurestaticapps.net/dashboard");
+        // TODO: Have to change this to a relative link, otherwise the session information is lost
+        // Solution is to inject frontend build files into the backend and serve them
+        res.redirect("/StockPikr_Frontend/#/dashboard");
       }
     );
 
     // Check if user is logged in
     router.get("/api/login/active", (req, res) => {
-      res.send(req.session["uuid"] ? true : false);
+      if (req.session["uuid"]) {
+        res.send(true);
+      } else {
+        res.send(false);
+      }
     });
 
-    // Logout route
+    // Heartbeat route
+    router.get("/heartbeat", (req, res) => {
+      res.json({ status: "Alive - Dil Dhakad Raha Hai" });
+    });
+
     router.get("/logout", (req, res) => {
       req.session.destroy((err) => {
         if (err) {
           return res.status(500).send("Internal Server Error");
         }
-        res.redirect("https://agreeable-ground-08e4a8b1e.4.azurestaticapps.net/signin");
+        res.redirect("/StockPikr_Frontend/#/signin");
       });
     });
-
-    // Set up all existing routes
-    this.express.use("/", router);
 
     this.express.use(
       "/api/users",
@@ -153,6 +166,24 @@ class App {
       purchasedStocksRouter
     );
 
+    // Test routes
+    // this.express.use("/test/api/users", (req, res, next) => {
+    //   userRouter(req, res, next);
+    // });
+
+    // this.express.use("/test/api/watchlists", (req, res, next) => {
+    //   watchlistRouter(req, res, next);
+    // });
+    // Debug route to check all registered routes
+    router.get("/debug/routes", (req, res) => {
+        res.json(this.express._router.stack
+            .filter((r: any) => r.route)
+            .map((r: any) => r.route.path));
+    });
+
+    // Setup all existing routes
+    this.express.use("/", router);
+
     this.express.use(
       "/api/stockdata",
       this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
@@ -171,8 +202,8 @@ class App {
       latestStockInfoRouter
     );
 
-    // Serve the frontend from the backend if needed
-    this.express.use("/", express.static("public"));
+    this.express.use("/", router);
+    this.express.use("/StockPikr_Frontend", express.static("public")); // Frontend served at localhost:8080/StockPikr_Frontend
   }
 }
 
