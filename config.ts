@@ -9,7 +9,7 @@ export const config = {
   MONGO_CONN_TIMEOUT: 1000,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-  GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
+  GOOGLE_CALLBACK_URL: "http://stockpikr.westus.cloudapp.azure.com:5000/auth/google/callback",
   NODE_ENV: process.env.NODE_ENV || "production"
 };
 console.log("Google OAuth Config:", {
