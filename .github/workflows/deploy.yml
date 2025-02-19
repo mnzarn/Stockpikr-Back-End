@@ -31,7 +31,6 @@ jobs:
           echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/stockpikr_id_rsa
           chmod 644 ~/.ssh/known_hosts
-
       - name: Setup Production Server
         run: pm2 deploy production setup
 
@@ -41,20 +40,6 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_CALLBACK_URL: ${{ secrets.GOOGLE_CALLBACK_URL }}
         run: pm2 deploy production --force
-        
-      - name: Inject Environment Variables into Remote Server
-        run: |
-          ssh -i ~/.ssh/stockpikr_id_rsa azureuser@40.78.98.127 << 'EOF'
-            sudo sed -i '/GOOGLE_CLIENT_ID/d' /etc/environment
-            sudo sed -i '/GOOGLE_CLIENT_SECRET/d' /etc/environment
-            sudo sed -i '/GOOGLE_CALLBACK_URL/d' /etc/environment
-            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" | sudo tee -a /etc/environment
-            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" | sudo tee -a /etc/environment
-            echo "GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}" | sudo tee -a /etc/environment
-            echo "NODE_ENV=production" | sudo tee -a /etc/environment
-            source /etc/environment
-            pm2 restart stockpikr-backend --update-env
-          EOF
 
       - name: Clean Up SSH Keys
         run: rm -rf ~/.ssh/
