@@ -31,6 +31,7 @@ jobs:
           echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/stockpikr_id_rsa
           chmod 644 ~/.ssh/known_hosts
+
       - name: Setup Production Server
         run: pm2 deploy production setup
 
@@ -39,6 +40,7 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_CALLBACK_URL: ${{ secrets.GOOGLE_CALLBACK_URL }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: pm2 deploy production --force
 
       - name: Clean Up SSH Keys
