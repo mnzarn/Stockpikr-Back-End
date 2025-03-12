@@ -64,7 +64,7 @@ class App {
   public routes(): void {
     const router = express.Router();
     // setup all custom routers
-    const userRouter = userRouterHandler(this.models.userModel);
+    const userRouter = userRouterHandler();
     const stockDataRouter = stockDataRouterHandler(this.models.stockDataModel);
     const watchlistRouter = watchlistRouterHandler(this.models.watchlistModel, this.models.latestStockInfoModel);
     const purchasedStocksRouter = purchasedStocksRouterHandler(this.models.purchasedStockModel);
@@ -270,3 +270,4 @@ class App {
 }
 
 export { App };
+
