@@ -10,4 +10,3 @@ admin.initializeApp({
 });
 
 export { admin };
-
