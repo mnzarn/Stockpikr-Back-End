@@ -20,7 +20,8 @@ class WatchlistModel extends BaseModel {
           {
             _id: false,
             symbol: String,
-            alertPrice: Number
+            alertPrice: Number,
+            threshold: Number
           }
         ]
       },
@@ -58,6 +59,14 @@ class WatchlistModel extends BaseModel {
     );
   }
 
+  public async updateWatchlistTickerThreshold(watchlistName: string, userID: string, ticker: MinimalWatchlistTicker) {
+    return this.model.findOneAndUpdate(
+      { watchlistName, userID },
+      { $set: { "tickers.$[el].threshold": ticker.threshold } },
+      { arrayFilters: [{ "el.symbol": ticker.symbol }], new: true, lean: true }
+    );
+  }
+
   public async deleteTickersInWatchlist(watchlistName: string, userID: string, tickerSymbols: string[]) {
     return this.model.updateMany({ watchlistName, userID }, { $pull: { tickers: { symbol: { $in: tickerSymbols } } } });
   }
@@ -88,3 +97,4 @@ class WatchlistModel extends BaseModel {
 }
 
 export { WatchlistModel };
+
