@@ -20,8 +20,7 @@ class WatchlistModel extends BaseModel {
           {
             _id: false,
             symbol: String,
-            alertPrice: Number,
-            threshold: Number
+            alertPrice: Number
           }
         ]
       },
@@ -55,14 +54,6 @@ class WatchlistModel extends BaseModel {
     return this.model.findOneAndUpdate(
       { watchlistName, userID },
       { $set: { "tickers.$[el].alertPrice": ticker.alertPrice } },
-      { arrayFilters: [{ "el.symbol": ticker.symbol }], new: true, lean: true }
-    );
-  }
-
-  public async updateWatchlistTickerThreshold(watchlistName: string, userID: string, ticker: MinimalWatchlistTicker) {
-    return this.model.findOneAndUpdate(
-      { watchlistName, userID },
-      { $set: { "tickers.$[el].threshold": ticker.threshold } },
       { arrayFilters: [{ "el.symbol": ticker.symbol }], new: true, lean: true }
     );
   }
