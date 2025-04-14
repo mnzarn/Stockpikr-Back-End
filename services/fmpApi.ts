@@ -12,7 +12,7 @@ export class StockApiService {
   //                           Properties
   //----------------------------------------------------------------//
 
-  private static _apiKeyParam = `apikey=${config.FMP_API_KEY}`;
+  private static _apiKeyParam = `apikey=7UPQdo3AjbuFyM12teTbC0Un7sEABUvw`;
   private static timeout = 10000; // 10 secs
   private static _apiService: AxiosInstance | null = null;
   // TODO: how to get list of supported exchanges on FMP?
