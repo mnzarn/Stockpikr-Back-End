@@ -15,8 +15,7 @@ const purchasedStocksRouterHandler = (PurchasedStocks: PurchasedStockModel) => {
       purchasePrice,
     }];
     
-   
-    const userID = req.session["uuid"] ? req.session["uuid"] : req.body.userID;
+    const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
     try {
         await PurchasedStocks.addPurchasedStock(userID, tickers);
 
@@ -31,8 +30,8 @@ const purchasedStocksRouterHandler = (PurchasedStocks: PurchasedStockModel) => {
 
   purchasedStocksRouter.get("/", async (req, res, next) => {
     try {
-      const id = req.session["uuid"] ? req.session["uuid"] : req.body.userID;
-      const purchasedStocks = await PurchasedStocks.getPurchasedStocksByUserID(id);
+      const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
+      const purchasedStocks = await PurchasedStocks.getPurchasedStocksByUserID(userID);
       if (purchasedStocks) {
         res.json(purchasedStocks);
       } else {
@@ -46,7 +45,7 @@ const purchasedStocksRouterHandler = (PurchasedStocks: PurchasedStockModel) => {
 
   purchasedStocksRouter.patch("/", async (req, res, next) => {
     try {
-      const userID = req.session["uuid"] ? req.session["uuid"] : (req.body.userID as string);
+      const userID = req.session["uuid"] ? req.session["uuid"] : (req.query.userId as string);
       console.log(req.body)
       const result = await PurchasedStocks.deleteTickersInPurchasedStock(userID, req.body);
       console.log(result)
