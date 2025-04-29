@@ -3,34 +3,61 @@ import { getCurrentTimestampSeconds } from "../utils";
 import { StockApiService } from "./fmpApi";
 
 export class CronFmp {
-  // we keep track of the stored timestamp in memory for simplicity. It gets updated every
-  constructor(
-    private latestStockModel: LatestStockInfoModel,
-    private storedTimestamp: number = getCurrentTimestampSeconds(),
-    private queryStocksInterval: number = 24 * 60 * 60 // default is 1 day
-  ) {}
+  private storedTimestamp: number = getCurrentTimestampSeconds();
+  private queryStocksInterval: number = 60; // default is 1 day
 
+  constructor(private latestStockModel: LatestStockInfoModel, storedTimestamp?: number) {
+  this.storedTimestamp = storedTimestamp || getCurrentTimestampSeconds();
+}
   private storeNewTickers = async () => {
-    const tickers = await StockApiService.fetchExchangeSymbols();
-    await this.latestStockModel.addBulkTickers(tickers);
+    try {
+      console.log("storeNewTickers called");
+      const tickers = await StockApiService.fetchExchangeSymbols();
+      console.log(`Fetched ${tickers.length} tickers in storeNewTickers.`);
+      await this.latestStockModel.addBulkTickers(tickers);
+      console.log("storeNewTickers completed.");
+    } catch (error) {
+      console.error("Error in storeNewTickers:", error);
+    }
   };
 
   private updateLatestTickers = async () => {
-    const latestTickers = await StockApiService.fetchExchangeSymbols();
-    await this.latestStockModel.updateBulkTickers(latestTickers);
+    try {
+      console.log("updateLatestTickers called");
+      const latestTickers = await StockApiService.fetchExchangeSymbols();
+      console.log(`Fetched ${latestTickers.length} tickers in updateLatestTickers.`);
+      await this.latestStockModel.updateBulkTickers(latestTickers);
+      console.log("updateLatestTickers completed.");
+    } catch (error) {
+      console.error("Error in updateLatestTickers:", error);
+    }
   };
 
-  // TODO: write test cases
-  fetchOrUpdateLatestStocks = async () => {
-    const latestStockInfo = await this.latestStockModel.getAllLatestStockQuotes();
-    if (!latestStockInfo || latestStockInfo.length === 0) await this.storeNewTickers();
-    else {
-      const timestampInSeconds = getCurrentTimestampSeconds();
-      // only update quotes if we find a quote that has not been updated for at least a day
-      if (timestampInSeconds - this.queryStocksInterval > this.storedTimestamp) {
-        await this.updateLatestTickers();
-        this.storedTimestamp = timestampInSeconds;
+  public fetchOrUpdateLatestStocks = async () => {
+    console.log("Cron job started: fetchOrUpdateLatestStocks");
+    try {
+      const latestStockInfo = await this.latestStockModel.getAllLatestStockQuotes();
+      console.log("Fetched latest stock info from DB:", latestStockInfo);
+
+      if (!latestStockInfo || latestStockInfo.length === 0) {
+        console.log("No stock info found. Calling storeNewTickers...");
+        await this.storeNewTickers();
+        console.log("storeNewTickers completed.");
+      } else {
+        const timestampInSeconds = getCurrentTimestampSeconds();
+        console.log("Current timestamp:", timestampInSeconds, "Stored timestamp:", this.storedTimestamp);
+
+        if (timestampInSeconds - this.queryStocksInterval > this.storedTimestamp) {
+          console.log("Calling updateLatestTickers...");
+          await this.updateLatestTickers();
+          console.log("updateLatestTickers completed.");
+          this.storedTimestamp = timestampInSeconds;
+        } else {
+          console.log("No update needed. Data is up-to-date.");
+        }
       }
+    } catch (error) {
+      console.error("Error in fetchOrUpdateLatestStocks:", error);
     }
   };
 }
