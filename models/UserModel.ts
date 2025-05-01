@@ -22,7 +22,11 @@ class UserModel extends BaseModel {
         lastName: String,
         email: String,
         phoneNumber: String,
-        profilePic: String
+        profilePic: String,
+        notifications: {
+          type: Boolean,
+          default: false,
+        },
       },
       {
         collection: "users"
@@ -51,7 +55,8 @@ class UserModel extends BaseModel {
     lastName: string,
     email: string,
     phoneNumber: string,
-    profilePic: string
+    profilePic: string,
+    notifications: boolean = false
   ) {
     const userID = uuidv4();
 
@@ -62,7 +67,8 @@ class UserModel extends BaseModel {
       lastName: lastName,
       email: email,
       phoneNumber: phoneNumber,
-      profilePic: profilePic
+      profilePic: profilePic,
+      notifications: notifications,
     });
 
     await newUser.save();
@@ -91,6 +97,16 @@ class UserModel extends BaseModel {
   public async getUsers() {
     return this.model.find();
   }
+
+  public async setNotifications(authID: string, enabled: boolean) {
+  return this.model.findOneAndUpdate(
+    { authID },
+    { notifications: enabled },
+    { new: true }
+  );
+}
+
 }
 
 export { UserModel };
+
