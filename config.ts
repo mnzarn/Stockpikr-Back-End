@@ -3,6 +3,8 @@ dotenv.config();
 
 export const config = {
   FMP_API_KEY: process.env.FMP_API_KEY,
+  EMAIL_USERNAME: process.env.EMAIL_USERNAME,
+  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
   PORT: process.env.PORT || 80,
   DB_CONNECTION_STRING:
     process.env.DB_CONNECTION_STRING || "mongodb+srv://test:test@stockpikr.zrmjvdi.mongodb.net/Users",

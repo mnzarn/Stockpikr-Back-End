@@ -20,7 +20,11 @@ class WatchlistModel extends BaseModel {
           {
             _id: false,
             symbol: String,
-            alertPrice: Number
+            alertPrice: Number,
+            notified: {
+              type: Boolean,
+              default: false
+            }
           }
         ]
       },
@@ -47,14 +51,18 @@ class WatchlistModel extends BaseModel {
   }
 
   public async updateWatchlist(watchlistName: string, userID: string, tickers?: MinimalWatchlistTicker[]) {
-    return this.model.findOneAndUpdate({ watchlistName, userID }, { tickers }, { new: true, lean: true });
+    return this.model.findOneAndUpdate(
+      { watchlistName, userID },
+      { $set: { tickers } },
+      { new: true }
+    );
   }
 
   public async updateWatchlistTicker(watchlistName: string, userID: string, ticker: MinimalWatchlistTicker) {
     return this.model.findOneAndUpdate(
       { watchlistName, userID },
-      { $set: { "tickers.$[el].alertPrice": ticker.alertPrice } },
-      { arrayFilters: [{ "el.symbol": ticker.symbol }], new: true, lean: true }
+      { $set: { "tickers.$[el].alertPrice": ticker.alertPrice, "tickers.$[el].notified": false } },
+      { arrayFilters: [{ "el.symbol": ticker.symbol }], new: true }
     );
   }
 

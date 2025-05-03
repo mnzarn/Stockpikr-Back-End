@@ -167,3 +167,4 @@ class LatestStockInfoModel extends BaseModel {
 }
 
 export { LatestStockInfoModel };
+

@@ -10,6 +10,7 @@ export interface IWatchlistModel extends mongoose.Document {
 export type MinimalWatchlistTicker = {
   symbol: string; // should be unique
   alertPrice: number;
+  notified?: boolean; 
 };
 
 export type CustomTickerData = {
