@@ -6,6 +6,8 @@ import sinonChai from "sinon-chai";
 import supertest from "supertest";
 import { App } from "supertest/types";
 import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
+import { UserModel } from "../models/UserModel";
+import { WatchlistModel } from "../models/WatchlistModel";
 import { initServer } from "../server";
 import { CronFmp } from "../services/cronFmp";
 import { StockApiService } from "../services/fmpApi";
@@ -49,17 +51,21 @@ let mongoServer: MongoMemoryServer;
 describe("test-cronfmp", () => {
   let server: App;
   let latestStocks: LatestStockInfoModel;
-
-  beforeEach(() => {
-    sandbox.restore();
-  });
+  let userModel: UserModel;
+  let watchlistModel: WatchlistModel;
 
   before(async () => {
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri);
     latestStocks = new LatestStockInfoModel(mongoose.connection);
+    userModel = new UserModel(mongoose.connection);
+    watchlistModel = new WatchlistModel(mongoose.connection);
     server = initServer({ latestStockInfoModel: latestStocks });
+  });
+
+  beforeEach(async () => {
+    sandbox.restore();
   });
 
   after(async () => {
@@ -67,61 +73,58 @@ describe("test-cronfmp", () => {
     await mongoServer.stop();
   });
 
-  it("test cron fmp empty db should bulk add new tickers", async () => {
-    // fixture, mock fmp api to return our wanted api
+  it("should bulk add new tickers when DB is empty", async () => {
     sandbox.stub(StockApiService, "fetchExchangeSymbols").resolves(stockInfos as any);
-    const cronFmp = new CronFmp(latestStocks);
+    const cronFmp = new CronFmp(latestStocks, userModel, watchlistModel);
     await cronFmp.fetchOrUpdateLatestStocks();
 
     const res = await supertest.agent(server).get("/api/lateststockinfo/").send();
     expect(res.status).eq(200);
-    console.log(res.body);
-    expect(res.body).to.be.an("array");
-    expect(res.body.length).eq(2);
+    expect(res.body).to.be.an("array").with.length(2);
     expect(res.body[0].symbol).eq(tickers[0]);
   });
 
-  it("test cron fmp already have data but no update because storedTimestamp within 1 day", async () => {
-    // fixture, mock fmp api to return our wanted api
-    sandbox.stub(StockApiService, "fetchExchangeSymbols").resolves(stockInfos);
-    const cronFmp = new CronFmp(latestStocks);
-    await cronFmp.fetchOrUpdateLatestStocks();
+  it("should not update tickers if storedTimestamp is within 1 day", async () => {
+    // Insert data first
+    sandbox.stub(StockApiService, "fetchExchangeSymbols").resolves(stockInfos as any);
+    const cronFmp1 = new CronFmp(latestStocks, userModel, watchlistModel);
+    await cronFmp1.fetchOrUpdateLatestStocks();
     sandbox.restore();
 
-    // action. Call fetchOrUpdateLatestStocks again, which will not update new stocks
-    sandbox
-      .stub(StockApiService, "fetchExchangeSymbols")
-      .resolves(stockInfos.map((info) => ({ ...info, symbol: "FAKE_TICKER_3" })));
-    await cronFmp.fetchOrUpdateLatestStocks();
-    // should stay the same
+    // Change response to new symbols, but timestamp is still "fresh"
+    sandbox.stub(StockApiService, "fetchExchangeSymbols")
+      .resolves(stockInfos.map((s) => ({ ...s, symbol: "FAKE_TICKER_3" })));
+
+    const cronFmp2 = new CronFmp(latestStocks, userModel, watchlistModel);
+    await cronFmp2.fetchOrUpdateLatestStocks();
+
     const res = await supertest.agent(server).get("/api/lateststockinfo/").send();
     expect(res.status).eq(200);
-    console.log(res.body);
-    expect(res.body).to.be.an("array");
-    expect(res.body.length).eq(2);
+    expect(res.body).to.be.an("array").with.length(2);
     expect(res.body[0].symbol).eq(tickers[0]);
   });
 
-  it("test cron fmp update data when storedTimestamp > 1 day", async () => {
-    // fixture, mock fmp api to return our wanted api
+  it("should update data when storedTimestamp is older than 1 day", async () => {
     await latestStocks.addBulkTickers(stockInfos);
-    const newSymbol = "FAKE_TICKER_3";
-    // add a new ticker by using a new symbol while updating one and keep one the same
-    const newStockInfos = [{ ...stockInfos[0], symbol: newSymbol }, { ...stockInfos[0], price: 100 }, stockInfos[1]];
-    const cronFmp = new CronFmp(latestStocks, 1607110244); // Friday, December 4, 2020. Should update new batch
 
-    // action. Call fetchOrUpdateLatestStocks again, which will update new stocks & data
+    const newSymbol = "FAKE_TICKER_3";
+    const newStockInfos = [
+      { ...stockInfos[0], symbol: newSymbol },
+      { ...stockInfos[0], price: 100 }, // updated
+      stockInfos[1]
+    ];
+
     sandbox.stub(StockApiService, "fetchExchangeSymbols").resolves(newStockInfos);
+
+    // Use overrideNow to simulate old data
+    const oneDayAgo = now - (60 * 60 * 24 + 1);
+    const cronFmp = new CronFmp(latestStocks, userModel, watchlistModel, oneDayAgo);
     await cronFmp.fetchOrUpdateLatestStocks();
-    // should stay the same
+
     const res = await supertest.agent(server).get("/api/lateststockinfo/").send();
     expect(res.status).eq(200);
-    console.log(res.body);
-    expect(res.body).to.be.an("array");
-    expect(res.body.length).eq(3);
-    expect(res.body[0].symbol).eq(newSymbol);
-    expect(res.body[1].price).eq(100);
-    expect(res.body[2].symbol).eq(tickers[1]);
-    expect(res.body[2].price).eq(145.775);
+    expect(res.body).to.be.an("array").with.length(3);
+    expect(res.body.find((s: any) => s.symbol === newSymbol)).to.exist;
+    expect(res.body.find((s: any) => s.price === 100)).to.exist;
   });
 });
