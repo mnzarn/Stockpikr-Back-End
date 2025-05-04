@@ -61,8 +61,6 @@ export class CronFmp {
       // Store tickers in a Set to get unique values
       const uniqueTickers = [...new Set(tickers.map((ticker) => ticker.symbol))];
 
-      console.log("Fetched latest stock info from DB:", latestStockInfo);
-
       if (!latestStockInfo || latestStockInfo.length === 0) {
         console.log("No stock info found. Calling storeNewTickers...");
         await this.storeNewTickers();

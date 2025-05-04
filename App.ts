@@ -81,50 +81,6 @@ class App {
       res.send("Express + TypeScript Server");
     });
 
-    // router.get(
-    //   "/login/federated/google",
-    //   passport.authenticate("google", {
-    //     scope: ["profile", "email"]
-    //   }),
-    //   (req, res) => {
-    //     res.send("Successful login");
-    //   }
-    // );
-
-    // router.get(
-    //   "/login/federated/google/callback",
-    //   (req, res, next) => {
-    //     req.session.save();
-    //     next();
-    //   },
-    //   passport.authenticate("google", {
-    //     failureRedirect: "/StockPikr_Frontend/#/signin"
-    //   }),
-    //   async (req, res) => {
-    //     const googleProfile: any = JSON.parse(JSON.stringify(req.user));
-    //     let doesUserExist: any = await this.models.userModel.getUserByAuth(googleProfile.id);
-
-    //     if (!doesUserExist) {
-    //       let newUser: any = await this.models.userModel.addUser(
-    //         googleProfile.id,
-    //         googleProfile.name.givenName,
-    //         googleProfile.name.familyName,
-    //         googleProfile.emails[0].value,
-    //         "123456789",
-    //         googleProfile.photos[0].value
-    //       );
-    //       req.session["uuid"] = newUser;
-    //     } else {
-    //       req.session["uuid"] = doesUserExist.userID;
-    //     }
-    //     req.session.save();
-
-    //     // TODO: Have to change this to a relative link, otherwise the session information is lost
-    //     // Solution is to inject frontend build files into the backend and serve them
-    //     res.redirect("/StockPikr_Frontend/#/dashboard");
-    //   }
-    // );
-
     router.post("/api/login", async (req, res) => {
       const { token } = req.body;
 
@@ -155,16 +111,6 @@ class App {
       }
     });
 
-
-    // Check if user is logged in
-    // router.get("/api/login/active", (req, res) => {
-    //   if (req.session["uuid"]) {
-    //     res.send(true);
-    //   } else {
-    //     res.send(false);
-    //   }
-    // });
-
     router.get("/api/login/active", verifyFirebaseToken, (req, res) => {
       res.json({ success: true, user: req.user });
     });
@@ -182,51 +128,6 @@ class App {
         res.redirect("/StockPikr_Frontend/#/signin");
       });
     });
-
-    // this.express.use(
-    //   "/api/users",
-    //   this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
-    //   userRouter
-    // );
-
-    // this.express.use(
-    //   "/api/watchlists",
-    //   this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
-    //   watchlistRouter
-    // );
-
-    // this.express.use(
-    //   "/api/positions",
-    //   this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
-    //   purchasedStocksRouter
-    // );
-
-    // // Test routes
-    // // this.express.use("/test/api/users", (req, res, next) => {
-    // //   userRouter(req, res, next);
-    // // });
-
-    // // this.express.use("/test/api/watchlists", (req, res, next) => {
-    // //   watchlistRouter(req, res, next);
-    // // });
-
-    // this.express.use(
-    //   "/api/stockdata",
-    //   this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
-    //   stockDataRouter
-    // );
-
-    // this.express.use(
-    //   "/api/purchasedstocks",
-    //   this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
-    //   purchasedStocksRouter
-    // );
-
-    // this.express.use(
-    //   "/api/lateststockinfo",
-    //   this.middlewareInstance ? this.middlewareInstance.validateAuth : (req, res, next) => next(),
-    //   latestStockInfoRouter
-    // );
 
     this.express.use(
       "/api/users",
