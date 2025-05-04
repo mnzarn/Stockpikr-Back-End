@@ -25,6 +25,10 @@ const transformMinimalToDetailedTickers = async (
   const detailedTickers = await latestStockInfo.getLatestStockQuotes(tickers.map((t) => t.symbol));
   for (const ticker of tickers) {
     const detailedTicker = detailedTickers.find((t) => t.symbol === ticker.symbol);
+    if (!detailedTicker) {
+      //console.warn(`No detailed data found for symbol: ${ticker.symbol}`);
+      continue;
+    }
     returnedTickers.push({
       ...ticker,
       ...detailedTicker,
@@ -155,6 +159,7 @@ const watchlistRouterHandler = (Watchlists: WatchlistModel, latestStockInfo: Lat
           return;
         }
         updatedTickers[tickerIndex].alertPrice = ticker.alertPrice;
+        updatedTickers[tickerIndex].notified = false;
       }
       await Watchlists.updateWatchlist(watchlistName, userID, updatedTickers);
       res.status(200).json({});

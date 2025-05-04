@@ -4,7 +4,6 @@ import { ICompanyProfile } from "../interfaces/ICompanyProfile";
 import { ILatestStockInfoModel } from "../interfaces/ILatestStockInfoModel";
 import IStockData from "../interfaces/IStockData";
 import { IStockPriceChange } from "../interfaces/IStockPriceChanges";
-import { IStockQuote } from "../interfaces/IStockQuote";
 import { getCurrentTimestampSeconds } from "../utils";
 
 export class StockApiService {
@@ -12,7 +11,7 @@ export class StockApiService {
   //                           Properties
   //----------------------------------------------------------------//
 
-  private static _apiKeyParam = `apikey=7UPQdo3AjbuFyM12teTbC0Un7sEABUvw`;
+  private static _apiKeyParam = `apikey=${config.FMP_API_KEY}`;
   private static timeout = 10000; // 10 secs
   private static _apiService: AxiosInstance | null = null;
   // TODO: how to get list of supported exchanges on FMP?
@@ -92,17 +91,19 @@ export class StockApiService {
     return [];
   }
 
-  public static async fetchStockQuotes(input: string): Promise<IStockQuote[]> {
+  public static async fetchStockQuotes(input: string): Promise<ILatestStockInfoModel | null> {
     if (input.trim().length === 0) {
-      return [];
+      return null;
     }
     const url = `/v3/quote/${input}`;
-    const response = await StockApiService.fetchData<IStockQuote[]>(url);
-    if (response) {
-      return response;
+    const response = await StockApiService.fetchData<ILatestStockInfoModel[]>(url);
+    if (response && response.length > 0) {
+      const now = getCurrentTimestampSeconds();
+      return { ...response[0], storedTimestamp: now };
     }
-    return [];
+    return null;
   }
+
   public static async fetchCompanyProfile(input: string): Promise<ICompanyProfile[]> {
     if (input.trim().length === 0) {
       return [];
