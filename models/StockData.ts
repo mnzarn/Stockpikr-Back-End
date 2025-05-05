@@ -70,6 +70,18 @@ class StockDataModel extends BaseModel {
     }
   }
 
+  public async searchStocks(input: string, _limit?: number, _offset?: number) {
+    const limit = _limit > 20 ? 20 : _limit;
+    const offset = _offset ? +_offset : 0;
+    return this.model
+      .find(
+        { $or: [{ symbol: { $regex: input, $options: "i" } }, { name: { $regex: input, $options: "i" } }] },
+        {},
+        { limit, lean: true }
+      )
+      .skip(limit * offset);
+  }
+
   public async getStocks() {
     try {
       // TODO: add pagination
@@ -82,3 +94,4 @@ class StockDataModel extends BaseModel {
 }
 
 export { StockDataModel };
+
