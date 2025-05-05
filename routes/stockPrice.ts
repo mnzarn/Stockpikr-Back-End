@@ -15,18 +15,35 @@ const stockDataRouterHandler = (stockDataModel: StockDataModel) => {
     try {
       const { value } = req.params;
       const { limit } = req.query;
-      // const stockData = await stockDataModel.getStockDataBySymbol(symbol);
-      // FIXME: change to querying stocks from the backend
-      // const stocks = await stockDataModel.getStocks();
-      const stockData = await StockApiService.fetchStockData(value, limit as any);
-      console.log("Get one user by ID stock data: ", stockData);
-      if (stockData) {
-        res.json(stockData);
-      } else {
-        res.status(404).json({ error: "Stock data not found" });
+      const numericLimit = limit ? parseInt(limit as string) : undefined;
+
+      const dbResults = await stockDataModel.searchStocks(value);
+
+      if (dbResults.length > 0) {
+        return res.status(200).json(dbResults);
       }
+
+      const apiResults = await StockApiService.fetchStockData(value, numericLimit);
+
+      if (!apiResults || !Array.isArray(apiResults) || apiResults.length === 0) {
+        return res.status(404).json({ error: "Stock data not found" });
+      }
+
+      for (const stock of apiResults) {
+        try {
+          const exists = await stockDataModel.model.exists({ symbol: stock.symbol });
+          if (!exists) {
+            const { symbol, name, currency, stockExchange, exchangeShortName } = stock;
+            await stockDataModel.addStockData({ symbol, name, currency, stockExchange, exchangeShortName });
+          }
+        } catch (saveError) {
+          console.error(`Error saving stock (${stock.symbol}):`, saveError);
+        }
+      }
+
+      return res.status(200).json(apiResults);
     } catch (error) {
-      console.error("Error fetching stockData data:", error);
+      console.error("Error fetching stock data:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
