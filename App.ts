@@ -67,7 +67,7 @@ class App {
     const userRouter = userRouterHandler(this.models.userModel);
     const stockDataRouter = stockDataRouterHandler(this.models.stockDataModel);
     const watchlistRouter = watchlistRouterHandler(this.models.watchlistModel, this.models.latestStockInfoModel);
-    const purchasedStocksRouter = purchasedStocksRouterHandler(this.models.purchasedStockModel);
+    const purchasedStocksRouter = purchasedStocksRouterHandler(this.models.purchasedStockModel, this.models.latestStockInfoModel);
     const latestStockInfoRouter = latestStockInfoRouterHandler(this.models.latestStockInfoModel);
 
     router.use((req, res, next) => {
