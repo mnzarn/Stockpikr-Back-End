@@ -14,8 +14,3 @@ export const config = {
   GOOGLE_CALLBACK_URL: "http://stockpikr.westus.cloudapp.azure.com:5000/auth/google/callback",
   NODE_ENV: process.env.NODE_ENV || "production"
 };
-console.log("Google OAuth Config:", {
-  GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID ? "Loaded " : "MISSING",
-  GOOGLE_CLIENT_SECRET: config.GOOGLE_CLIENT_SECRET ? "Loaded " : "MISSING",
-  GOOGLE_CALLBACK_URL: config.GOOGLE_CALLBACK_URL ? "Loaded " : " MISSING"
-});
