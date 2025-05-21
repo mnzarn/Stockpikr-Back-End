@@ -1,14 +1,10 @@
 import { Connection, Model, Schema } from "mongoose";
-import { IPurchasedStockModel, Ticker } from "../interfaces/IPurchasedStockModel";
-import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
-
-
 import { ILatestStockInfoModel } from "../interfaces/ILatestStockInfoModel";
+import { IPurchasedStockModel, Ticker } from "../interfaces/IPurchasedStockModel";
 import BaseModel from "./BaseModel";
 
 class PurchasedStockModel extends BaseModel {
   public model: Model<IPurchasedStockModel>;
-  private static instance: PurchasedStockModel;
 
   public constructor(connection: Connection) {
     super(connection);
@@ -18,7 +14,8 @@ class PurchasedStockModel extends BaseModel {
 
   public createSchema = (): void => {
     this.schema = new Schema(
-      {
+      { 
+       purchasedstocksName: String,
         userID: String,
         tickers: [
           {
@@ -35,9 +32,11 @@ class PurchasedStockModel extends BaseModel {
         ]
       },
       {
-        collection: "purchasedStocks"
+        collection: "purchasedStocks",
+        timestamps: false
       }
     );
+    this.schema.index({ purchasedstocksName: 1, userID: 1 }, { unique: true });
   };
 
   public createModel = () => {
@@ -48,45 +47,46 @@ class PurchasedStockModel extends BaseModel {
     }
   };
 
-  public static getInstance(connection: Connection): PurchasedStockModel {
-    if (!PurchasedStockModel.instance) {
-      PurchasedStockModel.instance = new PurchasedStockModel(connection);
+
+
+ public async addPurchasedStock(userID: string, purchasedstocksName: string, tickers: Ticker[]) {
+  const newPurchasedStock = new this.model({
+    purchasedstocksName: purchasedstocksName.trim(),
+    userID: userID,
+    tickers: tickers,
+  });
+
+  return await newPurchasedStock.save();
+}
+  public async updatePurchasedStock(purchasedstocksName: string, userID: string, tickers?: Ticker[]) {
+  return this.model.findOneAndUpdate(
+    { purchasedstocksName, userID },
+    { $set: { tickers } },
+    { new: true }
+  );
+}
+  public async updatePurchasedStockTicker(purchasedstocksName: string, userID: string, ticker: Ticker) {
+  return this.model.findOneAndUpdate(
+    { purchasedstocksName, userID },
+    {
+      $set: {
+        "tickers.$[el].quantity": ticker.quantity,
+        "tickers.$[el].purchaseDate": ticker.purchaseDate,
+        "tickers.$[el].purchasePrice": ticker.purchasePrice,
+        "tickers.$[el].price": ticker.price,
+        "tickers.$[el].priceChange": ticker.priceChange,
+        "tickers.$[el].gainOrLoss": ticker.gainOrLoss,
+        "tickers.$[el].marketValue": ticker.marketValue
+      }
+    },
+    {
+      arrayFilters: [{ "el.symbol": ticker.symbol }],
+      new: true
     }
-    return PurchasedStockModel.instance;
-  }
-
-  public async addPurchasedStock(userID: string, tickers: Ticker[]) {
-    const existingDocument = await this.model.findOne({ userID });
-
-    if (existingDocument) {
-        existingDocument.tickers.push(...tickers);
-        console.log("Existing user found, updating tickers:", existingDocument);
-
-        return existingDocument.save();
-    } else {
-        const newPurchasedStock = new this.model({
-            userID: userID,
-            tickers: tickers.map(ticker => ({
-              symbol: ticker.symbol,
-              quantity: ticker.quantity,
-              purchaseDate: ticker.purchaseDate,
-              purchasePrice: ticker.purchasePrice,
-              price: 0,
-              priceChange: 0, // Default value for price change
-              gainOrLoss: 0, // Default value for gain or loss
-              marketValue: 0, // Default value for market value
-            })),
-        });
-        console.log("New user created:", newPurchasedStock);
-
-        return newPurchasedStock.save();
-    }
+  );
 }
 
-  public async updatePurchasedStock(userID: string, tickers?: Ticker[]) {
-    return this.model.findOneAndUpdate({ userID }, { tickers }, { new: false });
-  }
-  
+  /*
   public async getPurchasedStock(watchlistID: string, userID: string, symbol: string) {
     return this.model.findOne({ watchlistID: watchlistID, userID: userID, symbol: symbol });
   }
@@ -111,14 +111,44 @@ class PurchasedStockModel extends BaseModel {
     });
 
     return purchasedStocks;
-  }
+  }*/
+    public async deleteTickersInPurchasedStock(purchasedstocksName: string, userID: string, tickerSymbols: string[]) {
+  return this.model.updateMany(
+    { purchasedstocksName, userID },
+    { $pull: { tickers: { symbol: { $in: tickerSymbols } } } }
+  );
+}
 
-  public async deleteTickersInPurchasedStock(userID: string, tickerSymbols: string[]) {
-    return this.model.updateMany({ userID }, { $pull: { tickers: { symbol: { $in: tickerSymbols } } } });
+public async getPurchasedStocksByUserID(userID: string) {
+  return this.model.find({ userID }, {}, { lean: true });
+}
+
+public async getPurchasedStock(purchasedstocksName: string, userID: string) {
+  return this.model.findOne({ purchasedstocksName, userID }, {}, { lean: true });
+}
+
+public async getPurchasedStockTickers(purchasedstocksName: string, userID: string) {
+  return this.model.findOne({ purchasedstocksName, userID }, {}, { lean: true })?.select("tickers");
+}
+
+public async getPurchasedStockByNameAndUserID(userID: string, purchasedstocksName: string) {
+  return this.model.findOne({ purchasedstocksName, userID }, {}, { lean: true });
+}
+
+public async getAllPurchasedStocks() {
+  return this.model.find({}, {}, { lean: true });
+}
+
+public async deletePurchasedStock(purchasedstocksName: string, userID: string): Promise<any> {
+  return this.model.deleteOne({ purchasedstocksName, userID });
+}
+
+ public async getPurchasedStockByName(userID: string, name: string) {
+    return this.model.findOne({ userID, name }, {}, { lean: true });
   }
 
   private calculatePriceChange(ticker: Ticker, stockQuote: ILatestStockInfoModel): number {
-  return +(stockQuote.price - ticker.purchasePrice).toFixed(2);
+    return +(stockQuote.price - ticker.purchasePrice).toFixed(2);
   }
 
   private calculateMarketValue(ticker: Ticker, stockQuote: ILatestStockInfoModel): number {
@@ -132,8 +162,6 @@ class PurchasedStockModel extends BaseModel {
   private calculatePrice(stockQuote: ILatestStockInfoModel): number {
     return +stockQuote.price.toFixed(2);
   }
-
 }
 
 export { PurchasedStockModel };
-
