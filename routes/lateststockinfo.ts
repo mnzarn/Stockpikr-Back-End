@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
+import { StockApiService } from "../services/fmpApi";
 
 const latestStockInfoRouterHandler = (LatestStocks: LatestStockInfoModel) => {
   const latestStockInfoRouter = Router();
@@ -91,12 +92,23 @@ const latestStockInfoRouterHandler = (LatestStocks: LatestStockInfoModel) => {
     try {
       const symbol = req.params.symbol;
       console.log("symbol: ", symbol);
-      const latestStockInfo = await LatestStocks.getLatestStockQuoteDetailed(symbol);
-      if (latestStockInfo) {
-        res.json(latestStockInfo);
-      } else {
-        res.status(404).json({ error: "Latest Stock Info not found" });
+
+      const dbResult = await LatestStocks.getLatestStockQuoteDetailed(symbol);
+
+      if (dbResult) {
+        return res.status(200).json(dbResult);
       }
+
+      const apiResult = await StockApiService.fetchStockQuotes(symbol);
+      
+      if (!apiResult) {
+        return res.status(404).json({ error: "Stock data not found" });
+      }
+
+      await LatestStocks.addNewTickerInfo(apiResult);
+
+      return res.status(200).json(apiResult);
+
     } catch (error) {
       console.error("Error fetching latest stock info:", error);
       res.status(500).json({ error: "Internal server error" });
