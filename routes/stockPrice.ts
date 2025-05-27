@@ -42,9 +42,10 @@ const stockDataRouterHandler = (stockDataModel: StockDataModel) => {
       }
 
       return res.status(200).json(apiResults);
-    } catch (error) {
-      console.error("Error fetching stock data:", error);
-      res.status(500).json({ error: "Internal server error" });
+    } catch (error: any) {
+      const message = error?.message || 'Internal server error';
+      const status = message.includes('API limit') ? 429 : 500;
+      res.status(status).json({ error: message });
     }
   });
 

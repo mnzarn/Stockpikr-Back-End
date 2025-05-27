@@ -39,8 +39,13 @@ export class CronFmp {
         latestTickers.push(stockQuote);
       }
       await this.latestStockModel.updateBulkTickers(latestTickers);
-    } catch (error) {
-      console.error("Error in updateLatestTickers:", error);
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('API limit')) {
+        console.warn(`API limit hit while updating latest tickers`);
+        return;
+      }
+    
+      console.error('Unexpected error in updateLatestTickers:', err);
     }
   };
 
