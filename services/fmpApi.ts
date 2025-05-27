@@ -46,16 +46,32 @@ export class StockApiService {
 
   private static async fetchData<T>(url: string): Promise<T | null> {
     try {
-      const response = await StockApiService.apiService.get<T>(url, { timeout: StockApiService.timeout });
-      return response.data;
-    } catch (error) {
-      if (error instanceof AxiosError && error.response != null) {
-        console.error("Error fetching results:", error.response.data);
+      const response = await StockApiService.apiService.get<T | string>(url, {
+        timeout: StockApiService.timeout
+      });
+  
+      // Some APIs return 200 with error string
+      if (typeof response.data === 'string' && response.data.includes('Limit Reach')) {
+        throw new Error('API limit reached. Please try again later.');
       }
-      return error.response?.data;
+  
+      return response.data as T;
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        const data = error.response.data;
+  
+        // Handle 429 rate limiting
+        if (error.response.status === 429 || (typeof data === 'object' && data['Error Message']?.includes('Limit Reach'))) {
+          throw new Error('API limit reached. Please try again later.');
+        }
+  
+        // Log unexpected error body
+        console.error('Unhandled API error:', data);
+      }
+  
+      throw error; // propagate
     }
-  }
-
+  }  
   //----------------------------------------------------------------//
   //                           Public
   //----------------------------------------------------------------//
