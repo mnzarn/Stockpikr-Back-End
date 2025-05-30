@@ -1,4 +1,5 @@
 import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
+import { PurchasedStockModel } from "../models/PurchasedStockModel";
 import { UserModel } from "../models/UserModel";
 import { WatchlistModel } from "../models/WatchlistModel";
 import { getCurrentTimestampSeconds } from "../utils";
@@ -16,6 +17,7 @@ export class CronFmp {
     private latestStockModel: LatestStockInfoModel,
     private userModel: UserModel,
     private watchlistModel: WatchlistModel,
+    private purchasedStockModel: PurchasedStockModel,
     storedTimestamp?: number
   ) {
     this.storedTimestamp = storedTimestamp || getCurrentTimestampSeconds();
@@ -101,6 +103,25 @@ export class CronFmp {
               }
             }
             await this.watchlistModel.updateWatchlist(wl.watchlistName, user.userID, wl.tickers);
+          }
+
+          const userPostions = await this.purchasedStockModel.getPurchasedStocksByUserID(user.authID);
+          for (const up of userPostions) {
+            for (const ticker of up.tickers) {
+              const latest = await this.latestStockModel.getLatestStockQuoteDetailed(ticker.symbol);
+              if (latest && latest.price == ticker.sellPrice && !ticker.notified) {
+                await EmailService.sendSellAlertEmail(
+                  user.email,
+                  ticker.symbol,
+                  latest.price,
+                  ticker.sellPrice
+                );
+
+                ticker.notified = true;
+                console.log(`📧 Email sent for ${ticker.symbol}`);
+              }
+            }
+            await this.purchasedStockModel.updatePurchasedStock(String(up.purchasedstocksName), user.userID, up.tickers);
           }
         }
 

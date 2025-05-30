@@ -24,10 +24,15 @@ class PurchasedStockModel extends BaseModel {
             quantity: Number,
             purchaseDate: Date,
             purchasePrice: Number,
+            sellPrice: Number,
             price: Number,
             priceChange: Number,
             gainOrLoss: Number,
             marketValue: Number,
+            notified: {
+              type: Boolean,
+              default: false
+            }
           }
         ]
       },
@@ -165,3 +170,4 @@ public async deletePurchasedStock(purchasedstocksName: string, userID: string): 
 }
 
 export { PurchasedStockModel };
+
