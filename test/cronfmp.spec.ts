@@ -6,6 +6,7 @@ import sinonChai from "sinon-chai";
 import supertest from "supertest";
 import { App } from "supertest/types";
 import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
+import { PurchasedStockModel } from "../models/PurchasedStockModel";
 import { UserModel } from "../models/UserModel";
 import { WatchlistModel } from "../models/WatchlistModel";
 import { initServer } from "../server";
@@ -53,6 +54,7 @@ describe("test-cronfmp", () => {
   let latestStocks: LatestStockInfoModel;
   let userModel: UserModel;
   let watchlistModel: WatchlistModel;
+  let purchasedStocks: PurchasedStockModel;
 
   before(async () => {
     mongoServer = await MongoMemoryServer.create();
@@ -61,6 +63,7 @@ describe("test-cronfmp", () => {
     latestStocks = new LatestStockInfoModel(mongoose.connection);
     userModel = new UserModel(mongoose.connection);
     watchlistModel = new WatchlistModel(mongoose.connection);
+    purchasedStocks = new PurchasedStockModel(mongoose.connection);
     server = initServer({ latestStockInfoModel: latestStocks });
   });
 
@@ -75,7 +78,7 @@ describe("test-cronfmp", () => {
 
   it("should bulk add new tickers when DB is empty", async () => {
     sandbox.stub(StockApiService, "fetchExchangeSymbols").resolves(stockInfos as any);
-    const cronFmp = new CronFmp(latestStocks, userModel, watchlistModel);
+    const cronFmp = new CronFmp(latestStocks, userModel, watchlistModel, purchasedStocks);
     await cronFmp.fetchOrUpdateLatestStocks();
 
     const res = await supertest.agent(server).get("/api/lateststockinfo/").send();
@@ -87,7 +90,7 @@ describe("test-cronfmp", () => {
   it("should not update tickers if storedTimestamp is within 1 day", async () => {
     // Insert data first
     sandbox.stub(StockApiService, "fetchExchangeSymbols").resolves(stockInfos as any);
-    const cronFmp1 = new CronFmp(latestStocks, userModel, watchlistModel);
+    const cronFmp1 = new CronFmp(latestStocks, userModel, watchlistModel, purchasedStocks);
     await cronFmp1.fetchOrUpdateLatestStocks();
     sandbox.restore();
 
@@ -95,7 +98,7 @@ describe("test-cronfmp", () => {
     sandbox.stub(StockApiService, "fetchExchangeSymbols")
       .resolves(stockInfos.map((s) => ({ ...s, symbol: "FAKE_TICKER_3" })));
 
-    const cronFmp2 = new CronFmp(latestStocks, userModel, watchlistModel);
+    const cronFmp2 = new CronFmp(latestStocks, userModel, watchlistModel, purchasedStocks);
     await cronFmp2.fetchOrUpdateLatestStocks();
 
     const res = await supertest.agent(server).get("/api/lateststockinfo/").send();
@@ -118,7 +121,7 @@ describe("test-cronfmp", () => {
 
     // Use overrideNow to simulate old data
     const oneDayAgo = now - (60 * 60 * 24 + 1);
-    const cronFmp = new CronFmp(latestStocks, userModel, watchlistModel, oneDayAgo);
+    const cronFmp = new CronFmp(latestStocks, userModel, watchlistModel, purchasedStocks, oneDayAgo);
     await cronFmp.fetchOrUpdateLatestStocks();
 
     const res = await supertest.agent(server).get("/api/lateststockinfo/").send();
