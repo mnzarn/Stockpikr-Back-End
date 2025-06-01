@@ -1,3 +1,4 @@
+import { CronStateModel } from "../models/CronStateModel";
 import { LatestStockInfoModel } from "../models/LatestStockInfoModel";
 import { PurchasedStockModel } from "../models/PurchasedStockModel";
 import { UserModel } from "../models/UserModel";
@@ -13,7 +14,7 @@ export class CronFmp {
   private apiLimitHit: boolean = false;
   private apiLimitResetTime: number = 0; // Unix timestamp (in seconds)
 
-
+  private readonly CRON_STATE_ID = "fmpStockUpdate";
   private readonly MAX_API_CALLS_PER_DAY = 102;
 
   constructor(
@@ -66,11 +67,35 @@ export class CronFmp {
     }
   };
 
+  private async loadCronState() {
+    const state = await CronStateModel.findById(this.CRON_STATE_ID);
+    if (state) {
+      this.lastRunTime = state.lastRunTime;
+      this.apiLimitHit = state.apiLimitHit;
+      this.apiLimitResetTime = state.apiLimitResetTime;
+    }
+  }
+
+  private async saveCronState() {
+    await CronStateModel.findByIdAndUpdate(
+      this.CRON_STATE_ID,
+      {
+        _id: this.CRON_STATE_ID,
+        lastRunTime: this.lastRunTime,
+        apiLimitHit: this.apiLimitHit,
+        apiLimitResetTime: this.apiLimitResetTime,
+      },
+      { upsert: true }
+    );
+  }
+
   public fetchOrUpdateLatestStocks = async () => {
     console.log("Cron job running");
     const now = getCurrentTimestampSeconds();
     const timestampISO = new Date(now * 1000).toISOString();
     console.log(`[${timestampISO}] Cron job started: fetchOrUpdateLatestStocks`);
+
+    await this.loadCronState();
 
     if (this.apiLimitHit && now < this.apiLimitResetTime) {
       const waitHours = ((this.apiLimitResetTime - now) / 3600).toFixed(2);
@@ -155,7 +180,7 @@ export class CronFmp {
 
         this.lastRunTime = now;
         this.previousTickerCount = currentTickerCount;
-
+        await this.saveCronState();
         console.log("Update completed");
       } else {
         const waitRemaining = minIntervalSeconds - timeSinceLastRun;
