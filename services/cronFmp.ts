@@ -10,8 +10,11 @@ export class CronFmp {
   private storedTimestamp: number = getCurrentTimestampSeconds();
   private previousTickerCount: number = 0;
   private lastRunTime: number = 0;
+  private apiLimitHit: boolean = false;
+  private apiLimitResetTime: number = 0; // Unix timestamp (in seconds)
 
-  private readonly MAX_API_CALLS_PER_DAY = 250;
+
+  private readonly MAX_API_CALLS_PER_DAY = 102;
 
   constructor(
     private latestStockModel: LatestStockInfoModel,
@@ -44,6 +47,18 @@ export class CronFmp {
     } catch (err) {
       if (err instanceof Error && err.message.includes('API limit')) {
         console.warn(`API limit hit while updating latest tickers`);
+        this.apiLimitHit = true;
+
+        // Set the reset time to start of the next day (midnight UTC)
+        const now = new Date();
+        const tomorrow = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate() + 1, // Next day
+          0, 0, 0, 0
+        ));
+        this.apiLimitResetTime = Math.floor(tomorrow.getTime() / 1000);
+
         return;
       }
     
@@ -56,6 +71,19 @@ export class CronFmp {
     const now = getCurrentTimestampSeconds();
     const timestampISO = new Date(now * 1000).toISOString();
     console.log(`[${timestampISO}] Cron job started: fetchOrUpdateLatestStocks`);
+
+    if (this.apiLimitHit && now < this.apiLimitResetTime) {
+      const waitHours = ((this.apiLimitResetTime - now) / 3600).toFixed(2);
+      console.log(`[${timestampISO}] API limit previously hit. Skipping until reset in ${waitHours} hours.`);
+      return;
+    }
+  
+    if (this.apiLimitHit && now >= this.apiLimitResetTime) {
+      // Reset the flag for the new day
+      console.log(`[${timestampISO}] API limit reset time reached. Resuming updates.`);
+      this.apiLimitHit = false;
+      this.apiLimitResetTime = 0;
+    }
 
     try {
       const allWatchlists = await this.watchlistModel.getWatchlists();
