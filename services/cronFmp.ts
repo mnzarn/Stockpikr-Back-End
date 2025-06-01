@@ -138,45 +138,49 @@ export class CronFmp {
 
         for (const user of users) {
           if (!user.notifications || !user.email) continue;
-
-          const userWatchlists = await this.watchlistModel.getWatchlistsByUserID(user.authID);
-          for (const wl of userWatchlists) {
-            for (const ticker of wl.tickers) {
-              const latest = await this.latestStockModel.getLatestStockQuoteDetailed(ticker.symbol);
-              if (latest && latest.price == ticker.alertPrice && !ticker.notified) {
-                await EmailService.sendAlertEmail(
-                  user.email,
-                  ticker.symbol,
-                  latest.price,
-                  ticker.alertPrice
-                );
-
-                ticker.notified = true;
-                console.log(`📧 Email sent to ${user.email} for ${ticker.symbol}`);
+        
+          try {
+            const userWatchlists = await this.watchlistModel.getWatchlistsByUserID(user.authID);
+            for (const wl of userWatchlists) {
+              for (const ticker of wl.tickers) {
+                const latest = await this.latestStockModel.getLatestStockQuoteDetailed(ticker.symbol);
+                if (latest && latest.price == ticker.alertPrice && !ticker.notified) {
+                  await EmailService.sendAlertEmail(
+                    user.email,
+                    ticker.symbol,
+                    latest.price,
+                    ticker.alertPrice
+                  );
+        
+                  ticker.notified = true;
+                  console.log(`📧 Email sent to ${user.email} for ${ticker.symbol}`);
+                }
               }
+              await this.watchlistModel.updateWatchlist(wl.watchlistName, user.userID, wl.tickers);
             }
-            await this.watchlistModel.updateWatchlist(wl.watchlistName, user.userID, wl.tickers);
-          }
-
-          const userPostions = await this.purchasedStockModel.getPurchasedStocksByUserID(user.authID);
-          for (const up of userPostions) {
-            for (const ticker of up.tickers) {
-              const latest = await this.latestStockModel.getLatestStockQuoteDetailed(ticker.symbol);
-              if (latest && latest.price == ticker.sellPrice && !ticker.notified) {
-                await EmailService.sendSellAlertEmail(
-                  user.email,
-                  ticker.symbol,
-                  latest.price,
-                  ticker.sellPrice
-                );
-
-                ticker.notified = true;
-                console.log(`📧 Email sent for ${ticker.symbol}`);
+        
+            const userPostions = await this.purchasedStockModel.getPurchasedStocksByUserID(user.authID);
+            for (const up of userPostions) {
+              for (const ticker of up.tickers) {
+                const latest = await this.latestStockModel.getLatestStockQuoteDetailed(ticker.symbol);
+                if (latest && latest.price == ticker.sellPrice && !ticker.notified) {
+                  await EmailService.sendSellAlertEmail(
+                    user.email,
+                    ticker.symbol,
+                    latest.price,
+                    ticker.sellPrice
+                  );
+        
+                  ticker.notified = true;
+                  console.log(`📧 Email sent for ${ticker.symbol}`);
+                }
               }
+              await this.purchasedStockModel.updatePurchasedStock(String(up.purchasedstocksName), user.userID, up.tickers);
             }
-            await this.purchasedStockModel.updatePurchasedStock(String(up.purchasedstocksName), user.userID, up.tickers);
+          } catch (err) {
+            console.error(`❌ Error processing user ${user.authID}:`, err);
           }
-        }
+        }        
 
         this.lastRunTime = now;
         this.previousTickerCount = currentTickerCount;
