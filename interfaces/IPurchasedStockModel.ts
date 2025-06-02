@@ -15,6 +15,7 @@ interface Ticker {
   priceChange: number;
   gainOrLoss: number;
   marketValue: number;
+  targetSellPrice: number;
 }
 
 export { IPurchasedStockModel, Ticker };

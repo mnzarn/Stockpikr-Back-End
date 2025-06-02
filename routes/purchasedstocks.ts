@@ -76,7 +76,8 @@ purchasedStocksRouter.post("/", async (req, res, next) => {
         price: 0,
         priceChange: 0,
         gainOrLoss: 0,
-        marketValue: 0
+        marketValue: 0,
+        targetSellPrice: 0,
       }];
     } else {
       return res.status(400).json({ error: "No tickers provided" });
@@ -87,7 +88,7 @@ purchasedStocksRouter.post("/", async (req, res, next) => {
     if (existing) {
       return res.status(403).json({ error: "Portfolio with this name already exists." });
     }
-
+    console.log('Tickers received from client:', tickers);
     const created = await PurchasedStocks.addPurchasedStock(userID, purchasedstocksName, tickers);
     res.status(200).json(created);
   } catch (error) {
