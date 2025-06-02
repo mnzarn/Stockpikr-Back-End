@@ -163,12 +163,12 @@ export class CronFmp {
             for (const up of userPostions) {
               for (const ticker of up.tickers) {
                 const latest = await this.latestStockModel.getLatestStockQuoteDetailed(ticker.symbol);
-                if (latest && latest.price == ticker.sellPrice && !ticker.notified) {
+                if (latest && latest.price == ticker.targetSellPrice && !ticker.notified) {
                   await EmailService.sendSellAlertEmail(
                     user.email,
                     ticker.symbol,
                     latest.price,
-                    ticker.sellPrice
+                    ticker.targetSellPrice
                   );
         
                   ticker.notified = true;
