@@ -29,6 +29,7 @@ class PurchasedStockModel extends BaseModel {
             priceChange: Number,
             gainOrLoss: Number,
             marketValue: Number,
+            targetSellPrice: Number,
             notified: {
               type: Boolean,
               default: false
