@@ -202,20 +202,23 @@ purchasedStocksRouter.put("/:name", async (req, res, next) => {
     // Accept either a single ticker or an array of tickers
     const tickers: Ticker[] = Array.isArray(req.body) ? req.body : [req.body];
 
+    const tickerKey = (t: Ticker) =>
+      `${t.symbol}-${t.purchaseDate ? new Date(t.purchaseDate).toISOString() : 'null'}`;
+    
     for (const ticker of tickers) {
       const stockQuote = await latestStockInfo.getLatestStockQuoteDetailed(ticker.symbol);
       if (!stockQuote) {
         return res.status(404).json({ error: `Cannot find stock symbol ${ticker.symbol}` });
       }
-      const tickerIndex = newTickers.findIndex(t => t.symbol === ticker.symbol);
-      if (tickerIndex === -1) {
-        // Add new ticker
-        newTickers.push(ticker);
+    
+      const index = newTickers.findIndex(t => tickerKey(t) === tickerKey(ticker));
+    
+      if (index === -1) {
+        newTickers.push(ticker); 
       } else {
-        // Update existing ticker
-        newTickers[tickerIndex] = { ...newTickers[tickerIndex], ...ticker };
+        newTickers[index] = { ...newTickers[index], ...ticker }; 
       }
-    }
+    }    
     
     updatedPortfolio = await PurchasedStocks.updatePurchasedStock(purchasedstocksName, userID, newTickers);
 
@@ -241,8 +244,6 @@ purchasedStocksRouter.patch("/tickers/:name", async (req, res, next) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
 
 purchasedStocksRouter.delete("/:name", async (req, res, next) => {
   try {
