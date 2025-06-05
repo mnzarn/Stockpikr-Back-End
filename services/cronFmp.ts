@@ -100,7 +100,6 @@ export class CronFmp {
     if (this.apiLimitHit && now < this.apiLimitResetTime) {
       const waitHours = ((this.apiLimitResetTime - now) / 3600).toFixed(2);
       console.log(`[${timestampISO}] API limit previously hit. Skipping until reset in ${waitHours} hours.`);
-      return;
     }
   
     if (this.apiLimitHit && now >= this.apiLimitResetTime) {
@@ -156,7 +155,7 @@ export class CronFmp {
                   console.log(`📧 Email sent to ${user.email} for ${ticker.symbol}`);
                 }
               }
-              await this.watchlistModel.updateWatchlist(wl.watchlistName, user.userID, wl.tickers);
+              await this.watchlistModel.updateWatchlist(wl.watchlistName, user.authID, wl.tickers);
             }
         
             const userPostions = await this.purchasedStockModel.getPurchasedStocksByUserID(user.authID);
@@ -175,7 +174,7 @@ export class CronFmp {
                   console.log(`📧 Email sent for ${ticker.symbol}`);
                 }
               }
-              await this.purchasedStockModel.updatePurchasedStock(String(up.purchasedstocksName), user.userID, up.tickers);
+              await this.purchasedStockModel.updatePurchasedStock(String(up.purchasedstocksName), user.authID, up.tickers);
             }
           } catch (err) {
             console.error(`❌ Error processing user ${user.authID}:`, err);
@@ -187,6 +186,53 @@ export class CronFmp {
         await this.saveCronState();
         console.log("Update completed");
       } else {
+        const users = await this.userModel.getUsers();
+
+        for (const user of users) {
+          if (!user.notifications || !user.email) continue;
+        
+          try {
+            const userWatchlists = await this.watchlistModel.getWatchlistsByUserID(user.authID);
+            for (const wl of userWatchlists) {
+              for (const ticker of wl.tickers) {
+                const latest = await this.latestStockModel.getLatestStockQuoteDetailed(ticker.symbol);
+                if (latest && latest.price == ticker.alertPrice && !ticker.notified) {
+                  await EmailService.sendAlertEmail(
+                    user.email,
+                    ticker.symbol,
+                    latest.price,
+                    ticker.alertPrice
+                  );
+        
+                  ticker.notified = true;
+                  console.log(`📧 Email sent to ${user.email} for ${ticker.symbol}`);
+                }
+              }
+              await this.watchlistModel.updateWatchlist(wl.watchlistName, user.authID, wl.tickers);
+            }
+        
+            const userPostions = await this.purchasedStockModel.getPurchasedStocksByUserID(user.authID);
+            for (const up of userPostions) {
+              for (const ticker of up.tickers) {
+                const latest = await this.latestStockModel.getLatestStockQuoteDetailed(ticker.symbol);
+                if (latest && latest.price == ticker.sellPrice && !ticker.notified) {
+                  await EmailService.sendSellAlertEmail(
+                    user.email,
+                    ticker.symbol,
+                    latest.price,
+                    ticker.sellPrice
+                  );
+        
+                  ticker.notified = true;
+                  console.log(`📧 Email sent for ${ticker.symbol}`);
+                }
+              }
+              await this.purchasedStockModel.updatePurchasedStock(String(up.purchasedstocksName), user.authID, up.tickers);
+            }
+          } catch (err) {
+            console.error(`❌ Error processing user ${user.authID}:`, err);
+          }
+        }        
         const waitRemaining = minIntervalSeconds - timeSinceLastRun;
         console.log(`[${timestampISO}] Skipping update. Need to wait ${waitRemaining} more seconds (${(waitRemaining / 60).toFixed(2)} minutes).`);
       }
